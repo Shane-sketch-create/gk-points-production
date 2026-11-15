@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GK 全館會員集點查驗｜正式環境建置中</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="./config.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0a1220;--pane:#111d30;--pane2:#19273d;--line:#2b3d55;--tx:#eff5ff;--muted:#a0b2ca;--gold:#ffc96c;--green:#6ee7b7;--red:#ff8b8b;--blue:#93c5fd}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0c1627,#0a1020 60%);color:var(--tx);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;line-height:1.5}header{border-bottom:1px solid var(--line);background:#101b2bee;padding:18px max(16px,calc((100% - 1230px)/2))}h1{font-size:23px;margin:0 0 4px}h2{font-size:19px;margin:0 0 12px}h3{font-size:15px;margin:0 0 12px;color:var(--gold)}p{margin:6px 0 12px}small,.muted{color:var(--muted)}main{max-width:1230px;margin:auto;padding:22px 16px 70px}.bar{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.panel{background:var(--pane);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;min-width:0}.panel.sub{background:var(--pane2);padding:14px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tab,.btn{background:#24354e;border:1px solid #415673;color:white;border-radius:10px;padding:10px 15px;cursor:pointer;font-size:14px;font-weight:700}.tab.active,.btn.primary{background:#f1b954;color:#192235;border-color:#f1b954}.btn.green{background:#126b57;border-color:#1c997a}.btn.red{background:#71333c;border-color:#ae5361}.btn:disabled{opacity:.45;cursor:not-allowed}.btn:hover:not(:disabled),.tab:hover{filter:brightness(1.12)}input,select{width:100%;background:#0c1828;border:1px solid #405571;border-radius:9px;padding:11px 12px;color:white;font:inherit;margin:4px 0 11px}input[type=file]{padding:8px}label{display:block;color:#c5d7ed;font-size:13px;font-weight:650}.buttons{display:flex;flex-wrap:wrap;gap:8px}.status{border-radius:30px;padding:5px 11px;border:1px solid var(--line);font-size:12px;color:var(--gold)}.notice{padding:12px 14px;border-radius:10px;background:#303118;border:1px solid #756c2d;color:#ffdf93;margin:12px 0}.notice.error{background:#3b1f29;border-color:#934658;color:#ffb0b4}.notice.ok{background:#143c35;border-color:#267968;color:#a8ffe1}.hidden{display:none!important}.info{font-size:13px;color:var(--muted)}.stat{background:#182942;border:1px solid #304a68;border-radius:11px;padding:12px}.stat b{font-size:22px;display:block;color:var(--gold)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#b5c9e1;white-space:nowrap}td{overflow-wrap:anywhere}.scroll{overflow-x:auto;max-width:100%}.pill{display:inline-block;background:#243c59;border-radius:8px;padding:3px 9px;margin:2px;color:#b9d8f7;font-size:12px}.okText{color:var(--green)}.badText{color:var(--red)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.row>*{flex:1;min-width:155px}.result{min-height:70px}.logtools{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px}.rule{border-left:3px solid var(--gold);padding-left:12px;color:#d0e0f1}.task-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 18px}.task-choice{background:#152740;border:2px solid #3b5673;border-radius:12px;padding:17px;color:var(--tx);text-align:left;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:5px;min-height:93px}.task-choice strong{font-size:17px}.task-choice span{color:var(--muted);font-size:13px}.task-choice.active{border-color:var(--gold);background:#27344a;box-shadow:inset 0 0 0 1px #d4a955}.task-choice.active span{color:var(--gold)}.task-choice:disabled{opacity:.6;cursor:not-allowed}.fixed-points{display:inline-block;color:var(--gold);font-weight:bold}.verify-actions{margin:6px 0 12px}.tiny{font-size:12px}.modal-overlay{position:fixed;inset:0;background:#020711e8;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}.modal-card{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#15253a;border:2px solid #e6b95f;border-radius:20px;box-shadow:0 24px 80px #000b;padding:28px;text-align:center}.modal-card h2{font-size:32px;color:#9ef7cb;margin:7px 0 14px}.modal-icon{width:62px;height:62px;border-radius:50%;background:#12725b;color:#fff;font-size:42px;line-height:62px;margin:auto}.modal-person{font-size:22px;font-weight:800;line-height:1.7}.modal-rule{font-size:19px;color:var(--gold);font-weight:800;margin:12px 0}.modal-instruction{font-size:21px;margin:16px 0;line-height:1.65}.modal-actions{display:grid;gap:12px;margin-top:18px}.modal-actions .btn{padding:17px 12px;font-size:17px}.keypad{margin:0 0 14px;border:1px solid #304a68;padding:8px 15px 17px;border-radius:12px}.keypad-caption{font-size:13px;color:#b8dafa;text-align:center;margin:0 0 8px}.phone-entry{font-size:25px;font-weight:750;letter-spacing:3px;text-align:center;padding:13px 12px;margin:7px 0 9px;border:2px solid #496680}.keypad-grid{max-width:355px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px auto 0}.keypad-grid button{background:#24354e;color:white;border:1px solid #45647f;border-radius:10px;min-height:59px;font-size:25px;font-weight:700;cursor:pointer;touch-action:manipulation}.keypad-grid button.keypad-other{font-size:16px;background:#37475e}.keypad-grid button:active{background:#38657e}.keypad-grid .keypad-enter{grid-column:1/-1;min-height:67px;font-size:22px;background:#f1b954;color:#192235;border-color:#f1b954;font-weight:800}.keypad-grid .keypad-enter:focus-visible,.keypad-grid button:focus-visible,.phone-entry:focus-visible{outline:3px solid #fbd582;outline-offset:2px}@media(max-width:560px){.modal-card{padding:19px}.modal-card h2{font-size:27px}.modal-instruction{font-size:18px}.modal-person{font-size:19px}}
+footer{margin-top:26px;color:#7d95b3;font-size:12px}@media(max-width:780px){.grid{grid-template-columns:1fr}.logtools{grid-template-columns:1fr 1fr}h1{font-size:20px}.panel{padding:15px}.task-choices{grid-template-columns:1fr}main{padding:15px 12px 40px}}
+
+/* v1.9：作業館別單行加大選擇器，保留原核銷流程 */
+.branch-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:nowrap;margin-bottom:10px}
+.branch-label{display:block;min-width:0;margin:0;color:#f6f9ff;font-size:25px;line-height:1.3;font-weight:800;white-space:nowrap}
+.branch-select-wrap{width:min(430px,58%);min-width:210px}
+select.branch-select{height:76px;margin:0;padding:12px 48px 12px 22px;background-color:#1e3653;border:2px solid #e3b65d;border-radius:14px;color:#ffffff;font-size:27px;font-weight:800;line-height:1.3;cursor:pointer;box-shadow:0 2px 0 #0006}
+select.branch-select option{font-size:22px;background:#182a41;color:#fff;font-weight:650}
+select.branch-select:hover{border-color:#ffd887;background-color:#263e5a}
+select.branch-select:focus-visible{outline:3px solid #ffdf92;outline-offset:3px}
+.branch-help{margin:0 0 16px}
+@media(max-width:560px){.branch-bar{gap:10px}.branch-label{font-size:21px}.branch-select-wrap{width:57%;min-width:0}select.branch-select{height:67px;padding:10px 36px 10px 13px;font-size:22px}}
+
+/* v1.9：匯入/查驗/核銷置中結果視窗及大字數字 */
+.feedback-card{width:min(620px,100%);border-color:#86baf5}
+.feedback-card.is-error{border-color:#ff9696}
+.feedback-card.is-warning{border-color:#ffca6b}
+.feedback-icon{font-size:52px;line-height:1.1;margin-bottom:8px}
+.feedback-card h2{color:#f4f8ff;font-size:31px;line-height:1.3}
+.feedback-card.is-error h2{color:#ffabab}
+.feedback-card.is-warning h2{color:#ffdb8c}
+.feedback-desc{font-size:19px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}
+.feedback-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:18px 0}
+.feedback-stats>div{background:#223a52;border:1px solid #466888;border-radius:12px;padding:14px 8px}
+.feedback-stats strong{display:block;color:#ffc96c;font-size:28px;font-variant-numeric:tabular-nums}
+.feedback-stats span{display:block;color:#c2d6ed;font-size:14px}
+.feedback-card .btn{font-size:21px;min-height:62px;width:100%}
+.pt-total{font-size:24px;color:#9ef7cb;font-weight:800;margin:12px 0}
+.pt-detail{font-size:16px;line-height:1.8}
+@media(max-width:560px){.feedback-card h2{font-size:27px}.feedback-desc{font-size:17px}}
+
+/* v1.9 館別隔離合約歸戶與課程核銷 */
+.contract-summary{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:#18334b;border:1px solid #47769d;padding:18px;border-radius:14px}
+.contract-summary strong{font-size:28px;color:#96f5cd}
+.contract-phone{font-size:19px;letter-spacing:1px}
+.contract-identity{background:#17384a;border:1px solid #4e829d;padding:15px;border-radius:11px;font-size:17px;line-height:1.8}
+.contract-identity strong{color:var(--gold)}
+.contract-bind-box{margin-top:14px;padding:16px;background:#1a2b42;border:1px solid #426281;border-radius:13px}
+.contract-bind-box label{font-size:16px}
+.contract-check{display:flex;align-items:flex-start;gap:12px;font-size:16px;color:#e7f2ff;margin:16px 0}
+.contract-check input{width:23px;height:23px;flex:0 0 23px;margin:2px}
+.contract-info{font-size:18px;line-height:1.65}
+.contract-table{font-size:15px}
+.contract-table td,.contract-table th{padding:12px}
+.contract-total{font-size:32px;color:#91ffcc;font-weight:900}
+@media(max-width:600px){.contract-total{font-size:28px}.contract-info{font-size:16px}}
+/* v1.10 已歸戶未領查詢 */
+.unclaimed-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:15px 0 18px}
+.unclaimed-stats .stat b{font-size:30px}
+.unclaimed-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:14px}
+.unclaimed-controls label{font-size:16px}
+.unclaimed-controls input{font-size:19px;min-height:53px;margin:8px 0 0}
+.unclaimed-controls .btn{font-size:17px;min-height:53px}
+.unclaimed-table th,.unclaimed-table td{font-size:16px;padding:13px 10px}
+.unclaimed-table .contract-cell{font-size:14px;line-height:1.8;color:#d9e5f5}
+.unclaimed-table .strong-point{font-size:24px;font-weight:900;color:#9ef7cb;white-space:nowrap}
+.unclaimed-table .name{font-size:19px;font-weight:800}
+.unclaimed-table .subphone{color:#b5d4f4;font-size:14px}
+@media(max-width:720px){.unclaimed-stats{grid-template-columns:1fr 1fr}.unclaimed-controls{grid-template-columns:1fr}.unclaimed-table th,.unclaimed-table td{font-size:14px;padding:10px 6px}}
+
+/* v1.12 依合約核銷，讓選取與確認動作清楚可見 */
+.pt-claim-contracts{font-size:17px;text-align:left;background:#1f3448;border:1px solid #47667e;border-radius:12px;padding:12px 18px;margin:13px 0;max-height:180px;overflow:auto;line-height:1.9}
+#view-pt .contract-table input[type=checkbox]{cursor:pointer;accent-color:#f1b954}
+#view-pt .contract-table tbody tr:hover{background:#20354c}
+/* v1.14 員工權限及邀請管理 */
+.staff-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.staff-admin-grid .btn{align-self:end}
+.table-scroller{overflow-x:auto}
+.table-scroller table{min-width:610px}
+fieldset[disabled]{opacity:.55}
+/* v1.13：匯出驗證及個資遮蔽 */
+.export-hint{font-size:13px;color:#c9dbed;line-height:1.75;margin:9px 0 16px}
+.export-scope{border-left:4px solid #f1b954;background:#233449;padding:11px 14px;margin:12px 0;border-radius:7px;font-weight:650}
+.export-modal h2{font-size:29px;color:#ffdf9c}
+.export-modal input[type=password]{text-align:center;font-size:26px;letter-spacing:6px;max-width:350px;display:block;margin:12px auto 16px}
+.export-modal .notice{font-size:14px;text-align:left}
+.export-controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:12px 0}
+.export-controls .btn{min-height:48px;font-size:16px}
+.coaches-list{line-height:1.65;color:#b9e2ff}
+@media(max-width:600px){.unclaimed-table th,.unclaimed-table td{font-size:13px}}
+
+/* v1.14.3：主管邀請自動寄送 Firebase Email Link，員工開信設定密碼；保留會員姓名修正流程。 */
+.member-edit-lookup{max-width:650px}
+.member-edit-profile{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#173046;border:1px solid #3e6684;border-radius:12px;padding:16px;margin:14px 0}
+.member-edit-profile .member-edit-name{font-weight:800;font-size:22px;overflow-wrap:anywhere}
+.member-edit-profile .btn{margin-left:auto}
+.member-edit-form{max-width:650px;padding:15px;border:1px solid #456782;border-radius:12px;background:#1b3048;margin-top:12px}
+.member-edit-form input{margin:6px 0 14px}
+.member-edit-step{display:inline-block;background:#27435e;color:#fbe0a5;border-radius:20px;padding:3px 11px;font-weight:800;font-size:12px;margin-bottom:10px}
+.member-edit-result{min-height:25px;margin:8px 0}
+@media(max-width:600px){.member-edit-profile .btn{margin-left:0;width:100%}.member-edit-profile{align-items:flex-start}}
+/* v1.14.1：主畫面四個入口；後台功能集中於第二層選單 */
+.primary-nav{gap:9px;margin:16px 0 14px}
+.primary-nav .tab{padding:12px 17px;min-height:48px}
+.backend-panel{background:#101e31;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 16px}
+.backend-heading h2{font-size:18px;margin:0 0 2px}
+.backend-heading p{margin:0 0 13px}
+.backend-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.backend-tab{background:#1a2b40;border:1px solid #3a5270;color:#dce9fa;border-radius:9px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:650;min-height:44px}
+.backend-tab.active{color:#182235;background:var(--gold);border-color:var(--gold);font-weight:800}
+.backend-tab:hover:not(:disabled){filter:brightness(1.13)}
+.backend-tab:disabled{opacity:.45;cursor:not-allowed}
+.backend-tab:focus-visible,.primary-nav .tab:focus-visible{outline:3px solid #ffdf92;outline-offset:3px}
+@media(max-width:560px){.primary-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.primary-nav .tab{padding:11px 6px;font-size:13px}.backend-panel{padding:13px}.backend-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.backend-tab{font-size:13px;padding:10px 6px}}
+</style>
+</head><body>
+<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式環境建置中 v1.14.6</small></div><div class="buttons"><span id="status" class="status">初始化中</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
+<main>
+<div id="banner" class="notice">正式環境建置中：尚未完成 Firebase 安全規則部署、權限檢查及正式驗收前，請勿匯入真實會員資料或進行正式核銷。</div>
+<section class="panel" id="modePanel"><h2>啟動方式</h2><p class="info">正式版只使用獨立的 Firebase 正式資料庫，不使用本機示範模式。</p><div class="buttons"><button class="btn primary" onclick="startCloud()">進入正式雲端系統</button></div></section>
+<section id="loginPanel" class="panel hidden"><div id="normalLoginFields"><h2>員工登入｜雲端模式</h2><div class="grid"><div><label>員工 Email<input type="email" id="email" autocomplete="username" placeholder="staff@example.com"></label></div><div><label>密碼<input type="password" id="password" autocomplete="current-password" placeholder="Firebase Authentication 密碼"></label></div></div><button class="btn primary" onclick="login()">登入並驗證權限</button><p class="info">既有帳號請直接登入。新員工由主管建立邀請並寄送 Email；收到信後點擊啟用連結，直接設定自己的密碼。</p></div>
+<div class="panel sub hidden" id="inviteActivationBox"><h2>啟用 GK 員工帳號</h2><p class="info">這是員工專用啟用表單，不需要輸入主管帳號。請填寫「收到這封信的員工 Email」，再設定密碼。</p><div class="grid"><label>受邀員工 Email<input type="email" id="activationEmail" placeholder="請填收到邀請的員工信箱" autocomplete="off" autocapitalize="none" spellcheck="false"></label><label>新員工登入密碼（至少 8 字元）<input type="password" id="activationPassword" placeholder="員工自行設定，請勿使用主管密碼" autocomplete="new-password"></label></div><button class="btn primary" id="activateButton" onclick="activateInvitedStaff()">驗證信箱並啟用帳號</button><p id="activationStatus" class="info" aria-live="polite"></p><button class="btn" type="button" onclick="backToRegularGKLogin()">已經設定過密碼？改用一般登入</button></div></section>
+<div id="app" class="hidden">
+<section class="panel"><div class="branch-bar"><label for="branch" class="branch-label">作業館別</label><div class="branch-select-wrap"><select id="branch" class="branch-select" onchange="branchChanged()" aria-label="作業館別"></select></div></div><p class="info branch-help">會員名冊與打卡／檢測限次紀錄全館共用；課程執行紀錄依館別與合約管理，無須先歸戶。</p><div class="grid" id="stats"><div class="stat">運動打卡：每週 1 次（全館共用）</div><div class="stat">身體檢測：每活動 1 次（全館共用）</div></div></section>
+<nav class="tabs primary-nav" aria-label="主要操作功能">
+  <button type="button" class="tab active" data-tab="verify" onclick="tab('verify')">集點資格查驗</button>
+  <button type="button" class="tab" data-tab="pt" onclick="tab('pt')">教練課程點數</button>
+  <button type="button" class="tab" data-tab="members" onclick="tab('members')">會員管理</button>
+  <button type="button" class="tab" data-tab="backend" onclick="tab('unclaimed')">後台管理</button>
+</nav>
+<section id="backendNav" class="backend-panel hidden" aria-label="後台管理選單">
+  <div class="backend-heading">
+    <div><h2>後台管理</h2><p class="info">請選擇要處理的後台項目。</p></div>
+  </div>
+  <nav class="backend-tabs" aria-label="後台管理功能">
+    <button type="button" class="backend-tab" data-backend-tab="member-edit" onclick="tab('member-edit')">會員姓名修改</button>
+    <button type="button" class="backend-tab" data-backend-tab="unclaimed" onclick="tab('unclaimed')">本館課程待領清單</button>
+    <button type="button" class="backend-tab" data-backend-tab="import" onclick="tab('import')">Excel 匯入</button>
+    <button type="button" class="backend-tab" data-backend-tab="logs" onclick="tab('logs')">全館核銷後台</button>
+    <button type="button" class="backend-tab" data-backend-tab="staff-admin" onclick="tab('staff-admin')">員工帳號管理</button>
+  </nav>
+</section>
+<section id="view-verify" class="panel">
+<h2>集點資格查驗</h2>
+<p class="info">這裡只記錄兩種限次集點。<strong>每次固定 1 點</strong>，會員與非會員的這兩項規則相同；所有分館合併計算。</p>
+<input type="hidden" id="task" value="CHECKIN">
+<div class="task-choices" role="group" aria-label="選擇集點項目">
+  <button type="button" class="task-choice active" data-task-choice="CHECKIN" aria-pressed="true" onclick="selectQuickTask('CHECKIN')"><strong>館內運動打卡</strong><span>每週最多 1 次・固定 1 點</span></button>
+  <button type="button" class="task-choice" data-task-choice="INBODY" aria-pressed="false" onclick="selectQuickTask('INBODY')"><strong>身體檢測</strong><span>活動期間最多 1 次・固定 1 點</span></button>
+</div>
+<label for="phone">參加者手機號碼</label>
+<input id="phone" class="phone-entry" type="tel" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="09XXXXXXXX" aria-describedby="phoneTip" oninput="resetVerification()">
+<p id="phoneTip" class="keypad-caption">輸入手機號碼後直接按 Enter 查驗（不需點輸入框）。若號碼不足 10 碼，系統會顯示提醒。</p>
+<div class="keypad" aria-label="手機號碼數字鍵盤">
+  <div class="keypad-grid" role="group" aria-label="輸入手機號碼"><button type="button" onclick="phoneKey('1')">1</button><button type="button" onclick="phoneKey('2')">2</button><button type="button" onclick="phoneKey('3')">3</button><button type="button" onclick="phoneKey('4')">4</button><button type="button" onclick="phoneKey('5')">5</button><button type="button" onclick="phoneKey('6')">6</button><button type="button" onclick="phoneKey('7')">7</button><button type="button" onclick="phoneKey('8')">8</button><button type="button" onclick="phoneKey('9')">9</button><button type="button" class="keypad-other" onclick="phoneKey('clear')" aria-label="清除手機號碼">清除</button><button type="button" onclick="phoneKey('0')">0</button><button type="button" class="keypad-other" onclick="phoneKey('back')" aria-label="刪除最後一碼">⌫</button><button type="button" class="keypad-enter" onclick="lookupMember()" aria-label="按 Enter 查詢領點資格">↵ Enter　查詢領點資格</button></div>
+</div>
+<p class="info">本網站只負責查驗資格、預留領點資格及登記紀錄，<strong>不會發放 LINE 點數</strong>。查驗通過後，櫃檯使用既有 LINE QR Code 發放，成功後才登記完成。</p>
+<div class="buttons verify-actions"><button id="lookupBtn" class="btn primary" onclick="lookupMember()">查詢領點資格</button></div>
+<div id="verifyResult" class="notice hidden result" aria-live="polite"></div>
+</section>
+<div id="claimModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="claimTitle">
+  <section class="modal-card">
+    <div class="modal-icon" aria-hidden="true">✓</div>
+    <h2 id="claimTitle">符合領點資格</h2>
+    <div id="claimPerson" class="modal-person"></div>
+    <div id="claimRule" class="modal-rule"></div>
+    <p class="modal-instruction">請提供現場的 <strong>LINE QR Code</strong>，讓會員完成領取點數。</p>
+    <div class="notice">本網站<b>不會直接發放 LINE 點數</b>。確認 LINE 發放成功後，才按下方的「登記完成」。</div>
+    <div id="modalError" class="notice error hidden" role="alert"></div><div class="modal-actions"><button id="finishClaim" class="btn green" onclick="redeem()">LINE 已成功發放 1 點 → 登記完成</button><button id="cancelClaim" class="btn" onclick="cancelReservation()">尚未發點 → 取消本次</button></div>
+  </section>
+</div>
+
+<div id="exportPinModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="exportPinTitle" aria-describedby="exportPinHelp">
+  <section class="modal-card export-modal">
+    <h2 id="exportPinTitle">主管匯出確認</h2>
+    <p id="exportPinTarget" class="modal-person"></p>
+    <p id="exportPinHelp" class="info">匯出包含可識別資料；只有主管可以操作。</p>
+    <label for="exportPinInput" style="font-size:16px">輸入主管匯出 PIN</label>
+    <input id="exportPinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="請輸入 PIN">
+    <p id="exportPinError" class="notice error hidden" role="alert"></p>
+    <div class="notice">主管 PIN 只能防止誤按，不能取代 Firebase 伺服器權限；正式資料請在權限驗收通過後才匯入。</div>
+    <div class="modal-actions"><button class="btn primary" onclick="confirmExportPIN()">驗證後匯出</button><button class="btn" onclick="cancelExportPIN()">取消</button></div>
+  </section>
+</div>
+<div id="feedbackModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-describedby="feedbackDesc">
+  <section id="feedbackCard" class="modal-card feedback-card">
+    <div id="feedbackIcon" class="feedback-icon" aria-hidden="true">✓</div>
+    <h2 id="feedbackTitle">操作結果</h2>
+    <div id="feedbackDesc" class="feedback-desc"></div>
+    <div id="feedbackStats" class="feedback-stats hidden"></div>
+    <div class="modal-actions"><button id="feedbackClose" class="btn primary" onclick="closeFeedbackModal()">確認，繼續操作 ↵</button></div>
+  </section>
+</div>
+<section id="view-pt" class="panel hidden">
+<h2>教練課程｜依合約查詢及核銷</h2>
+<p class="info">不用會員名冊或手機號碼。依目前所選館別，輸入<strong>學員姓名或合約訂單編號</strong>，選取正確合約後一次累計未領點數。<strong>同名多張合約不會自動合併</strong>，請先向公司原系統核對。</p>
+<div class="grid"><label>查詢學員姓名／合約訂單編號<input id="ptQuery" autocomplete="off" maxlength="120" placeholder="例如 王小明 或 THP260900027" onkeydown="if(event.key==='Enter'){event.preventDefault();searchPT()}"></label><div><label>&nbsp;</label><button class="btn primary" style="font-size:19px;min-height:51px" onclick="searchPT()">查詢本館待領課程</button></div></div>
+<div id="ptResult" class="result" style="margin-top:15px">請輸入姓名或合約編號查詢。</div>
+<p class="notice">請先確認選取的合約確實屬於同一位學員。網站只會紀錄核銷，LINE 點數仍由櫃檯另外發放。</p>
+</section>
+<section id="ptClaimModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ptClaimTitle">
+ <section class="modal-card">
+  <div class="modal-icon" aria-hidden="true">✓</div>
+  <h2 id="ptClaimTitle">已確認課程點數</h2>
+  <div id="ptClaimPerson" class="modal-person"></div>
+  <div id="ptClaimSummary" class="modal-rule"></div>
+  <p class="modal-instruction">請櫃檯提供現場的 <strong>LINE QR Code</strong>，由 LINE 實際發放本次點數。</p>
+  <div id="ptClaimContracts" class="pt-claim-contracts"></div>
+  <div class="notice">本網站不會發放 LINE 點數。<strong>只有在 LINE 確實發點後</strong>，才按「登記核銷完成」。</div>
+  <div class="modal-actions"><button class="btn green" id="ptFinishBtn" onclick="redeemSelectedPT()">LINE 已成功發點 → 登記核銷完成</button><button class="btn" onclick="cancelPTClaim()">尚未發點 → 返回修改</button></div>
+ </section>
+</section>
+<section id="view-unclaimed" class="panel hidden">
+<h2>本館課程｜尚未領點清單</h2>
+<p class="info">每張合約獨立列出，包含非會員。這不是會員歸戶名單；同名學員可能是不同人，請以合約訂單編號確認，不能只看姓名合併點數。教練欄顯示該合約歷來匯入的簽到教練。</p>
+<div id="unclaimedStats" class="unclaimed-stats"><div class="stat">待查詢<b>—</b></div></div>
+<div class="unclaimed-controls"><label>篩選學員姓名、教練或合約編號<input id="unclaimedFilter" autocomplete="off" placeholder="輸入姓名／教練／合約編號" oninput="renderUnclaimed()"></label><button class="btn primary" onclick="loadUnclaimed()">重新查詢本館待領合約</button></div>
+<div class="export-controls"><button data-export-only="true" class="btn green" onclick="exportUnclaimed()">主管匯出本館待領課程（Excel）</button></div>
+<p class="export-hint">僅匯出上方選定的作業館別；包含學員姓名、合約編號、該合約的教練姓名與待領點數。匯出前須通過主管驗證。</p>
+<p id="unclaimedStatus" class="info" role="status" aria-live="polite">切換至此頁籤後自動讀取。</p>
+<div id="unclaimedList" class="scroll"></div>
+<p class="notice">點「前往查詢」只會帶入該張訂單，若同一學員有多張合約，可改用姓名搜尋後勾選全部正確合約。</p>
+</section>
+<section id="view-members" class="panel hidden"><h2>會員管理｜新增會員</h2><p class="info">前台僅新增尚未建檔的會員，全館共用手機作為唯一識別鍵。若手機已存在，<strong>不會覆蓋原姓名</strong>；請到「後台管理 → 會員姓名修改」進行更正。員工須以完整手機查詢單筆會員，不可下載全館名冊。</p><div class="grid"><label>新會員姓名<input id="memberName" maxlength="80" placeholder="會員姓名"></label><label>新會員手機<input id="memberPhone" type="tel" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="09XXXXXXXX"></label></div><div class="buttons"><button class="btn primary" onclick="saveMember()">確認新增會員</button><button class="btn" onclick="searchMembers()">查詢會員</button></div><label id="memberSearchLabel">搜尋會員（主管可搜尋姓名；員工請輸入完整手機）<input id="memberFilter" placeholder="員工請輸入完整手機號碼"></label><div id="memberList" class="scroll"></div>
+<div class="export-controls"><button data-export-only="true" class="btn green" onclick="exportMembers()">主管匯出全館會員名冊（Excel，完整手機）</button></div>
+<p class="export-hint">畫面手機號碼會遮蔽中間四碼；主管匯出檔會保留完整手機號碼。<strong>會員名冊屬於全館共用資料，不依作業館別切分。</strong></p></section>
+<section id="view-member-edit" class="panel hidden">
+  <h2>會員姓名修改</h2>
+  <p class="info">此頁供已建檔會員更正姓名。<strong>必須先輸入完整手機號碼並查到現有姓名，才可進行修改。</strong> 不修改手機號碼，不刪除會員，也不清除既有領點紀錄。</p>
+  <div class="member-edit-lookup">
+    <div class="member-edit-step">步驟 1 ／ 查詢會員</div>
+    <label for="memberEditPhone">會員完整手機號碼</label>
+    <input id="memberEditPhone" type="tel" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="09XXXXXXXX" oninput="invalidateMemberEdit()" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupMemberForEdit()}">
+    <button class="btn primary" type="button" onclick="lookupMemberForEdit()">查詢現有姓名</button>
+    <p id="memberEditStatus" class="info member-edit-result" role="status" aria-live="polite">請先輸入 10 碼手機號碼。</p>
+  </div>
+  <div id="memberEditFound" class="member-edit-profile hidden">
+    <div><div class="info">目前登記姓名</div><div id="memberEditCurrentName" class="member-edit-name"></div><div id="memberEditMaskedPhone" class="info"></div></div>
+    <button class="btn" type="button" onclick="startMemberNameEdit()">修改姓名</button>
+  </div>
+  <div id="memberEditForm" class="member-edit-form hidden">
+    <div class="member-edit-step">步驟 2 ／ 輸入新姓名</div>
+    <label for="memberEditNewName">更正後姓名</label>
+    <input id="memberEditNewName" maxlength="80" autocomplete="off" placeholder="請輸入正確姓名">
+    <div class="buttons"><button class="btn primary" type="button" onclick="confirmMemberNameEdit()">確認修改姓名</button><button class="btn" type="button" onclick="cancelMemberNameEdit()">取消修改</button></div>
+    <p class="info">提交前會再次顯示舊姓名與新姓名，供你核對。</p>
+  </div>
+</section>
+<section id="view-import" class="panel hidden"><h2>資料批次匯入（主管權限）</h2><div class="grid"><div class="panel sub"><h3>一、匯入公司會員名冊</h3><p class="info">需要「姓名／顧客名稱」及「手機／電話」欄位；僅供運動打卡與身體檢測，全館共用，不依作業館別分組；新增／更新不會清除核銷歷史。</p><input id="memberFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空，方便接續匯入下一份。</p><button class="btn primary" onclick="importMemberFile()">預覽名冊並確認匯入</button></div><div class="panel sub"><h3>二、匯入教練課簽到報表</h3><p class="info">依上方選定館別匯入公司 11 欄課程執行報表，逐堂去重，依合約訂單編號建立待領點數；<strong>不需會員名冊，也不必歸戶</strong>。</p><input id="ptFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空，方便接續匯入下一份。</p><button class="btn primary" onclick="importPTFile()">預覽課程並確認匯入</button></div></div><p class="notice">重要：匯入成功訊息只會在雲端寫入完成後出現。大量匯入可能需要時間；請勿關閉頁面。系統不會替未存檔資料顯示成功。</p><div id="importResult" class="info"></div></section>
+<section id="view-logs" class="panel hidden"><h2>全館核銷紀錄後台</h2><p class="info">僅列出已由櫃檯確認 LINE 成功發點的紀錄，依雲端交易紀錄查詢，可跨館檢視全部核銷。核銷歷史不會因修改會員姓名而清除。列表每次載入最近 100 筆；主管匯出會依此區塊的「館別／項目／日期」條件擷取符合的完整紀錄，不受列表 100 筆限制。</p><div class="logtools"><label>館別<select id="logBranch"></select></label><label>項目<select id="logType"><option value="">全部項目</option><option value="CHECKIN">運動打卡</option><option value="INBODY">身體檢測</option><option value="PT">教練課程</option><option value="COURSE_EXEC">舊版手動執行課程（歷史紀錄）</option></select></label><label>開始日期<input id="logFrom" type="date"></label><label>結束日期<input id="logTo" type="date"></label></div><div class="buttons"><button class="btn" onclick="loadLogs(true)">查詢最近 100 筆</button><button id="moreLogsBtn" class="btn" onclick="loadLogs(false)">下一頁</button><button data-export-only="true" class="btn green" onclick="exportLogs()">主管匯出目前篩選紀錄（CSV）</button></div><div class="export-scope">匯出範圍依本區「館別」篩選：選「全部館別」即匯出全館；選單一館別即只匯出該館。項目與日期條件同步套用。CSV 含完整手機號碼，限主管驗證下載。</div><p id="logsSummary" class="info"></p><div id="logList" class="scroll"></div><section class="panel sub" id="pendingManage"><h3>待確認領點（主管處理）</h3><p class="info">例如櫃檯中途關閉頁面，會員資格會保留，避免其他館再次發放。主管須先確認 LINE 確實沒有發點，才能解除保留。</p><button class="btn" onclick="loadPending()">查詢待確認領點</button><div id="pendingList" class="scroll info" style="margin-top:12px"></div></section></section>
+<section id="view-staff-admin" class="panel hidden">
+  <h2>員工帳號管理｜僅管理員</h2>
+  <p class="info">輸入員工信箱與館別後按「建立邀請並寄送 Email」。員工點擊信中的連結後設定密碼即可啟用；主管無須知道密碼。若寄送失敗，可於下方重新寄送。</p>
+  <div class="panel sub"><h3>新增員工邀請</h3><div class="staff-admin-grid"><label>員工電子郵件<input type="email" id="inviteEmail" placeholder="staff@example.com" autocomplete="off"></label><label>指定館別<select id="inviteBranch"></select></label><button class="btn primary" onclick="inviteStaff()">建立邀請並寄送 Email</button></div><p id="inviteStatus" class="info" aria-live="polite"></p></div>
+  <div class="panel sub"><h3>待啟用／已使用邀請</h3><button class="btn" onclick="loadStaffAdmin()">重新整理員工清單</button><div id="inviteList" class="table-scroller info" style="margin-top:12px">尚未載入</div></div>
+  <div class="panel sub"><h3>員工帳號</h3><p class="info">可調整員工館別或停用／重新啟用；無法在此修改主管帳號。停用權限後，員工下一次雲端操作應被拒絕。</p><div id="staffUserList" class="table-scroller info">尚未載入</div></div>
+</section>
+<footer>GK 正式環境：與測試環境使用不同 Firebase 專案；尚未完成資料權限及跨館核銷正式驗收前，不得投入實際營運。</footer>
+</div></main>
+<script>
+'use strict';
+const CFG=window.GK_CONFIG, $=id=>document.getElementById(id);
+const types={CHECKIN:'運動打卡',INBODY:'身體檢測',PT:'教練課程',COURSE_EXEC:'執行課程'};
+let mode='',db=null,auth=null,user=null,role='',userProfile=null,registering=false,activationSignedInUid=null,logCursor=null,loadedLogs=[],logHasMore=false,busy=false,verified=null;
+const store={members:{},claims:{},logs:{},pools:{},sessions:{},ptSessionsV2:{},ptContractBalances:{},ptContractBindings:{}};
+let memberEditLookup=null;
+function escapeHTML(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(message,kind='ok',where='verifyResult'){const x=$(where);x.className='notice '+(kind==='error'?'error':kind==='ok'?'ok':'');x.textContent=message;x.classList.remove('hidden');}
+function fail(e,where='verifyResult'){console.error(e);toast('操作沒有完成：'+(e?.message||String(e))+'。資料未標記為成功。','error',where);}
+let ptSelection=null;
+let ptRows=[],ptSelected=new Set(),ptLookupBranch='';
+let unclaimedRows=[],unclaimedBranch='',unclaimedRequest=0;
+let pinGateResolve=null, pinAttempts=0;
+function showFeedbackModal(title,description,kind='ok',stats=[]){
+  $('feedbackTitle').textContent=title;
+  $('feedbackDesc').textContent=description||'';
+  const card=$('feedbackCard');card.classList.toggle('is-error',kind==='error');card.classList.toggle('is-warning',kind==='warning');
+  $('feedbackIcon').textContent=kind==='error'?'✕':kind==='warning'?'!':'✓';
+  const wrap=$('feedbackStats');wrap.replaceChildren();
+  for(const s of stats){const item=document.createElement('div'),num=document.createElement('strong'),label=document.createElement('span');num.textContent=String(s.value);label.textContent=s.label;item.append(num,label);wrap.appendChild(item);}
+  wrap.classList.toggle('hidden',stats.length===0);
+  $('feedbackModal').classList.remove('hidden');
+  $('feedbackClose').focus();
+}
+function closeFeedbackModal(){
+  $('feedbackModal').classList.add('hidden');
+  if(!$('app').classList.contains('hidden')&&!$('view-verify').classList.contains('hidden'))$('phone').focus();
+  else if(!$('view-pt').classList.contains('hidden'))$('ptQuery').focus();
+}
+// v1.13: PIN is an additional UI confirmation only. Public static JavaScript cannot protect a PIN or data.
+const EXPORT_PIN_FINGERPRINT='507186feab81e34e5b2e8fd7659ea9decf89487ad200326001218cdf32304b5d';
+async function requestExportPIN(target){
+  requireManager();
+  if(pinGateResolve)throw new Error('已有一項匯出驗證尚未完成');
+  if(pinAttempts>=5)throw new Error('這個頁面輸入錯誤次數過多，請重新登入後再試');
+  $('exportPinTarget').textContent=target;
+  $('exportPinInput').value='';$('exportPinError').classList.add('hidden');
+  $('exportPinModal').classList.remove('hidden');
+  $('exportPinInput').focus();
+  return await new Promise(resolve=>{pinGateResolve=resolve;});
+}
+function finishExportPIN(allowed){
+  $('exportPinModal').classList.add('hidden');$('exportPinInput').value='';
+  const resolve=pinGateResolve;pinGateResolve=null;if(resolve)resolve(allowed);
+}
+function cancelExportPIN(){finishExportPIN(false);}
+async function confirmExportPIN(){
+  if(!pinGateResolve)return;
+  const entered=$('exportPinInput').value;
+  const b=new TextEncoder().encode('GK-FRONTEND-EXPORT-PIN-v113:'+entered);
+  const digest=await crypto.subtle.digest('SHA-256',b);
+  const actual=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  if(actual===EXPORT_PIN_FINGERPRINT){pinAttempts=0;finishExportPIN(true);return;}
+  pinAttempts++;
+  $('exportPinInput').value='';
+  $('exportPinError').textContent=pinAttempts>=5?'驗證錯誤次數過多，請重新登入後再試。':`PIN 不正確，尚可嘗試 ${5-pinAttempts} 次`;
+  $('exportPinError').classList.remove('hidden');$('exportPinInput').focus();
+  if(pinAttempts>=5)finishExportPIN(false);
+}
+function maskPhone(p){const s=String(p??'');return /^09\d{8}$/.test(s)?s.slice(0,4)+'****'+s.slice(-2):s?'（已遮蔽）':'';}
+function writeExcelOrCSV(filename,headers,rows,phoneIndices=[]){
+  if(typeof XLSX!=='undefined'){
+    const data=[headers,...rows.map(row=>row.map((v,i)=>phoneIndices.includes(i)?String(v??''):v??''))];
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    for(let r=1;r<data.length;r++)for(const idx of phoneIndices){const cell=ws[XLSX.utils.encode_cell({r,c:idx})];if(cell){cell.t='s';cell.z='@';cell.v=String(data[r][idx]);}}
+    ws['!cols']=headers.map((h,i)=>({wch:Math.min(55,Math.max(15,String(h).length*2+6,...rows.slice(0,40).map(row=>String(row[i]??'').length*1.5)))}));
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'資料');XLSX.writeFile(wb,filename+'.xlsx');
+    return;
+  }
+  const csv=[headers,...rows].map(row=>row.map(csvCell).join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=filename+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function normalizedPhone(t){let p=String(t??'').replace(/\D/g,'');if(/^9\d{8}$/.test(p))p='0'+p;return /^09\d{8}$/.test(p)?p:'';}
+function tidyName(n){return String(n??'').trim().replace(/\s+/g,' ').slice(0,80);}
+function taipeiDate(d=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
+function isoWeek(d=new Date()){const parts=taipeiDate(d).split('-').map(Number);const x=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const year=x.getUTCFullYear();const jan=new Date(Date.UTC(year,0,1));return year+'-W'+String(Math.ceil((((x-jan)/86400000)+1)/7)).padStart(2,'0');}
+function keyRestricted(type,phone){return CFG.campaignId+'__'+type+'__'+phone+'__'+(type==='CHECKIN'?isoWeek():'once');}
+function cleanId(x){return String(x).replace(/[^\w\-]/g,'_').slice(0,220);}
+async function hash(t){const bytes=new TextEncoder().encode(t);const dig=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(dig)].map(n=>n.toString(16).padStart(2,'0')).join('');}
+function logData(type,name,phone,points,extra={}){return {campaignId:CFG.campaignId,type,name,phone:phone||'',points,branch:$('branch').value,week:isoWeek(),date: taipeiDate(),createdAt:mode==='cloud'?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString(),operator:mode==='cloud'?user.uid:'DEMO',...extra};}
+function isManager(){return mode==='demo'||role==='admin';}
+function requireManager(){if(!isManager())throw new Error('只有主管帳號有權限操作此功能');}
+function isStaff(){return mode==='cloud' && role==='staff';}
+function effectiveBranch(){return isStaff()?userProfile.branch:$('branch').value;}
+function requireActiveBranch(){if(isStaff()&&$('branch').value!==userProfile.branch)throw new Error('員工只能操作所屬館別，請重新登入');}
+function normalizeEmail(x){return String(x||'').trim().toLowerCase();}
+function setStatus(t){$('status').textContent=t;}
+function setupBranch(){const b=$('branch');const branches=isStaff()?[userProfile.branch]:CFG.branches;b.innerHTML=branches.map(s=>`<option>${escapeHTML(s)}</option>`).join('');b.value=isStaff()?userProfile.branch:(sessionStorage.getItem('gk_production_branch')||CFG.branches[0]);b.disabled=isStaff();$('logBranch').innerHTML='<option value="">全部館別</option>'+CFG.branches.map(s=>`<option>${escapeHTML(s)}</option>`).join('');$('logBranch').value=b.value;const i=$('inviteBranch');if(i)i.innerHTML=CFG.branches.map(s=>`<option>${escapeHTML(s)}</option>`).join('');}
+function branchChanged(){
+  if(isStaff() && $('branch').value!==userProfile.branch){$('branch').value=userProfile.branch;return;}
+  sessionStorage.setItem('gk_production_branch',$('branch').value);
+  $('logBranch').value=$('branch').value;
+  // Switching branch invalidates any previous PT lookup and contract-binding result.
+  ptSelection=null;ptRows=[];ptSelected.clear();ptLookupBranch='';unclaimedRequest++;unclaimedRows=[];unclaimedBranch='';
+  $('ptQuery').value='';$('ptResult').textContent='已切換館別；請重新查詢本館課程點數。';
+  $('ptClaimModal').classList.add('hidden');
+  $('unclaimedStatus').textContent='已切換館別；正在重新查詢目前館別。';$('unclaimedList').textContent='';$('unclaimedFilter').value='';$('unclaimedStats').innerHTML='<div class="stat">請重新查詢<b>—</b></div>'; 
+  resetVerification();refreshStats();
+  if(!$('view-unclaimed').classList.contains('hidden'))loadUnclaimed();
+}
+function resetVerification(){if(verified)return;const result=$('verifyResult');if(result)result.classList.add('hidden');}
+function selectQuickTask(t){if(!['CHECKIN','INBODY'].includes(t)||busy)return;$('task').value=t;for(const btn of document.querySelectorAll('[data-task-choice]')){const on=btn.dataset.taskChoice===t;btn.classList.toggle('active',on);btn.setAttribute('aria-pressed',String(on));}resetVerification();}
+function initApp(){setupBranch();$('modePanel').classList.add('hidden');$('loginPanel').classList.add('hidden');$('app').classList.remove('hidden');$('pendingManage').classList.toggle('hidden',!isManager());document.querySelectorAll('[data-export-only]').forEach(x=>x.classList.toggle('hidden',!isManager()));document.querySelector('[data-backend-tab="logs"]').classList.toggle('hidden',!isManager());document.querySelector('[data-backend-tab="import"]').classList.toggle('hidden',!isManager());document.querySelector('[data-backend-tab="staff-admin"]').classList.toggle('hidden',mode!=='cloud'||!isManager());$('who').textContent=mode==='demo'?'示範操作員':'登入帳號：'+user.email+' / '+role+(isStaff()?' / '+userProfile.branch+'館':'');selectQuickTask('CHECKIN');tab('verify');refreshStats();}
+function tab(name){if(['import','logs','staff-admin'].includes(name)&&!isManager())return;if(name==='staff-admin'&&mode!=='cloud')return;if(!$('feedbackModal').classList.contains('hidden'))closeFeedbackModal();if(name!=='pt'){cancelPTClaim();ptSelection=null;}const inBackend=['member-edit','unclaimed','import','logs','staff-admin'].includes(name);for(const p of document.querySelectorAll('[id^="view-"]'))p.classList.add('hidden');$('view-'+name).classList.remove('hidden');$('backendNav').classList.toggle('hidden',!inBackend);for(const p of document.querySelectorAll('.primary-nav .tab'))p.classList.toggle('active',p.dataset.tab===name||(p.dataset.tab==='backend'&&inBackend));for(const p of document.querySelectorAll('.backend-tab'))p.classList.toggle('active',inBackend&&p.dataset.backendTab===name);if(name==='logs')loadLogs(true);if(name==='members')searchMembers();if(name==='unclaimed')loadUnclaimed();if(name==='staff-admin')loadStaffAdmin();}
+function startDemo(){mode='demo';role='admin';try{Object.assign(store,JSON.parse(localStorage.getItem(CFG.demoStorageKey)||'{}'));}catch(e){};for(const k of ['ptSessionsV2','ptContractBalances','ptContractBindings'])store[k]=store[k]||{};if(!Object.keys(store.members||{}).length){store.members={'0911111111':{name:'示範會員甲',phone:'0911111111'},'0922222222':{name:'示範會員乙',phone:'0922222222'}};saveDemo();}setStatus('本機示範｜不跨裝置');$('banner').textContent='本機示範模式：僅使用虛構資料。沒有跨電腦同步，請勿輸入真實會員資料或用於正式核銷。';initApp();}
+function saveDemo(){localStorage.setItem(CFG.demoStorageKey,JSON.stringify(store));refreshStats();}
+function configured(){return CFG.firebase.apiKey!=='REPLACE_ME'&&CFG.firebase.projectId!=='REPLACE_ME';}
+function startCloud(){
+  if(!configured()){alert('尚未設定 Firebase 專案，請檢查 config.js。');return;}
+  try{
+    if(firebase.apps.length)firebase.app();else firebase.initializeApp(CFG.firebase);
+    auth=firebase.auth();db=firebase.firestore();db.settings({ignoreUndefinedProperties:true});mode='cloud';
+    $('modePanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');setStatus('等待員工登入');
+    const hasInviteLink=auth.isSignInWithEmailLink(window.location.href);
+    $('inviteActivationBox').classList.toggle('hidden',!hasInviteLink);
+    $('normalLoginFields').classList.toggle('hidden',hasInviteLink);
+    // Email 啟用時不可讓瀏覽器預填的主管登入框干擾員工信箱。
+    if(hasInviteLink){$('email').value='';$('password').value='';$('activationEmail').value='';}
+    auth.onAuthStateChanged(async u=>{
+      // Email 邀請認領流程由員工填寫收件信箱與密碼後啟動，不自動把舊登入狀態當成受邀員工。
+      if(registering||hasInviteLink)return;
+      if(!u){if($('app').classList.contains('hidden')){$('loginPanel').classList.remove('hidden');setStatus('等待員工登入');}return;}
+      try{await authorize(u);initApp();}
+      catch(e){await auth.signOut();$('app').classList.add('hidden');$('loginPanel').classList.remove('hidden');fail(e,'banner');setStatus('登入未授權');}
+    });
+  }catch(e){fail(e,'banner');}
+}
+async function authorize(u){
+  await u.reload();
+  await u.getIdToken(true);
+  let s=await db.collection('users').doc(u.uid).get({source:'server'});
+  if(!s.exists){
+    if(!u.emailVerified)throw new Error('此帳號尚未驗證電子郵件。請先完成驗證信流程再登入。');
+    await claimStaffInvite(u);
+    s=await db.collection('users').doc(u.uid).get({source:'server'});
+  }
+  if(!s.exists||s.data().enabled!==true||!['staff','admin'].includes(s.data().role))throw new Error('帳號未啟用或權限已停用');
+  if(s.data().role==='staff'&&!CFG.branches.includes(s.data().branch))throw new Error('員工尚未設定有效的所屬館別');
+  user=u;role=s.data().role;userProfile=s.data();setStatus('雲端登入｜交易核銷');$('logout').classList.remove('hidden');
+}
+async function claimStaffInvite(u){
+  const email=normalizeEmail(u.email),inviteId=await hash('GK-STAFF-INVITE|'+email);
+  const inviteRef=db.collection('staffInvites').doc(inviteId),userRef=db.collection('users').doc(u.uid);
+  await db.runTransaction(async tx=>{
+    const invite=await tx.get(inviteRef),existing=await tx.get(userRef);
+    if(existing.exists)return;
+    if(!invite.exists||invite.data().status!=='pending'||invite.data().email!==email||!CFG.branches.includes(invite.data().branch))throw new Error('找不到有效的受邀員工資料，請主管先建立邀請');
+    tx.set(userRef,{email,role:'staff',branch:invite.data().branch,enabled:true,inviteId,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    tx.update(inviteRef,{status:'claimed',claimedUid:u.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  });
+}
+async function login(){try{await auth.signInWithEmailAndPassword(normalizeEmail($('email').value),$('password').value);$('password').value='';}catch(e){fail(e,'banner');}}
+function inviteEmailActionSettings(){
+  // 使用現有 GitHub Pages 授權網域；Email Link 由 Firebase Auth 寄送。
+  return {url:window.location.origin+window.location.pathname,handleCodeInApp:true};
+}
+function backToRegularGKLogin(){
+  // 遺失或已使用的一次性 Email 連結，不能重用；回到乾淨登入頁面。
+  window.location.assign(window.location.origin+window.location.pathname);
+}
+async function activateInvitedStaff(){
+  if(registering)return;
+  const email=normalizeEmail($('activationEmail').value),password=$('activationPassword').value;
+  const status=$('activationStatus');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||password.length<8){status.textContent='請輸入收到邀請的【員工】電子郵件，以及至少 8 字元的員工密碼。';return;}
+  const emailLink=window.location.href;
+  const hasLink=!!auth&&auth.isSignInWithEmailLink(emailLink);
+  const canResume=!!auth&&!!activationSignedInUid&&auth.currentUser?.uid===activationSignedInUid&&normalizeEmail(auth.currentUser.email)===email;
+  if(!hasLink&&!canResume){status.textContent='目前沒有有效的邀請連結。請主管重寄新的 Email，或按「改用一般登入」。';return;}
+  registering=true;$('activateButton').disabled=true;
+  let stage='連結驗證';
+  try{
+    let invitedUser;
+    if(canResume){
+      invitedUser=auth.currentUser;
+    }else{
+      // 避免同一個瀏覽器殘留的主管登入狀態或自動填入干擾新員工啟用。
+      if(auth.currentUser && normalizeEmail(auth.currentUser.email)!==email){
+        status.textContent='偵測到另一個帳號登入中；正在切換至受邀員工…';
+        await auth.signOut();
+      }
+      status.textContent='正在驗證【'+email+'】的邀請連結…';
+      try{
+        const result=await auth.signInWithEmailLink(email,emailLink);
+        invitedUser=result.user;
+      }catch(e){
+        if(e.code==='auth/invalid-action-code'||e.code==='auth/expired-action-code'){
+          throw new Error('Email 連結已使用、過期，或填入的員工信箱與收件者不同。請先確認受邀信箱；如連結已失效，請主管重寄全新的 Email，不要重複點選舊信件。');
+        }
+        throw e;
+      }
+      // 此時 Firebase 一次性代碼已經成功兌換，先移除網址中的代碼。
+      activationSignedInUid=invitedUser.uid;
+      window.history.replaceState({},document.title,window.location.origin+window.location.pathname);
+    }
+    if(normalizeEmail(invitedUser.email)!==email||!invitedUser.emailVerified)throw new Error('登入信箱尚未完成驗證或與收件信箱不符');
+    stage='設定登入密碼';
+    status.textContent='信箱驗證成功，正在設定員工密碼…';
+    await invitedUser.updatePassword(password);
+    await invitedUser.getIdToken(true);
+    stage='建立 GK 員工權限';
+    status.textContent='密碼已設定，正在啟用 GK 員工權限…';
+    await claimStaffInvite(invitedUser);
+    await authorize(invitedUser);
+    $('activationPassword').value='';
+    $('inviteActivationBox').classList.add('hidden');
+    initApp();
+  }catch(e){
+    const code=e?.code?' ['+e.code+']':'';
+    if(activationSignedInUid&&auth?.currentUser?.uid===activationSignedInUid){
+      status.textContent=stage+'失敗'+code+'：'+(e?.message||String(e))+'。信箱驗證已成功，舊連結不能再使用；請保留此頁面，修正問題後可再按一次啟用，或用剛設定的密碼進入一般登入。';
+    }else{
+      status.textContent='啟用失敗（'+stage+'）'+code+'：'+(e?.message||String(e));
+    }
+    // 不強制登出成功兌換 Email Link 的員工，避免後續失敗時無法恢復。
+  }finally{registering=false;$('activateButton').disabled=false;}
+}
+async function logout(){if(mode==='cloud'){await auth.signOut();location.reload();}else location.reload();}
+function fresh(){if(mode!=='cloud')return; if(!navigator.onLine)throw new Error('網路離線；禁止核銷以避免跨館重複'); if(!user)throw new Error('尚未登入');}
+function lock(v){busy=v;for(const b of document.querySelectorAll('#app button')){if(!b.classList.contains('tab'))b.disabled=v;}for(const x of ['phone','branch'])if($(x))$(x).disabled=v;for(const id of ['finishClaim','cancelClaim'])if($(id))$(id).disabled=v;}
+function phoneKey(v){if(busy||verified)return;const el=$('phone');if(v==='clear')el.value='';else if(v==='back')el.value=el.value.slice(0,-1);else if(/^\d$/.test(v))el.value=(el.value+v).slice(0,10);resetVerification();}
+// 全頁查驗統一由同一個鍵盤事件處理；手機輸入框、畫面數字鍵、頁面空白處皆可按 Enter 查驗。
+// 避免原先手機輸入框的 inline onkeydown 與文件事件互相干擾。
+document.addEventListener('keydown',event=>{
+  if(!$('exportPinModal').classList.contains('hidden')){
+    if(event.key==='Enter'||event.code==='NumpadEnter'){event.preventDefault();confirmExportPIN();}
+    else if(event.key==='Escape'){event.preventDefault();cancelExportPIN();}
+    return;
+  }
+  if(!$('feedbackModal').classList.contains('hidden')){
+    if(event.key==='Enter'||event.code==='NumpadEnter'||event.key==='Escape'){
+      event.preventDefault();closeFeedbackModal();
+    }
+    return;
+  }
+  if(mode===''||busy||verified||$('app').classList.contains('hidden')||$('view-verify').classList.contains('hidden')||!$('claimModal').classList.contains('hidden')||event.ctrlKey||event.altKey||event.metaKey)return;
+  const el=document.activeElement;
+  if(event.key==='Enter'||event.code==='NumpadEnter'){
+    // 切換館別、頁籤與其他表單欄位仍保留原來的 Enter 行為。
+    if(el && (el.id==='branch'||el.id==='logout'||el.closest('nav.tabs')||el.isContentEditable))return;
+    if(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && el.id!=='phone')return;
+    event.preventDefault();
+    lookupMember(); // 不論是否滿 10 碼，都顯示成功、已領取或格式錯誤的置中結果視窗
+    return;
+  }
+  if(el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)||el.isContentEditable))return;
+  if(/^\d$/.test(event.key)){event.preventDefault();phoneKey(event.key);}
+  else if(event.key==='Backspace'){event.preventDefault();phoneKey('back');}
+});
+function showClaimModal(){if(!verified)return;$('claimPerson').textContent=verified.name+'｜'+verified.phone;$('claimRule').textContent=types[verified.type]+'｜本次可領取 1 點｜'+verified.branch;$('modalError').classList.add('hidden');$('claimModal').classList.remove('hidden');$('finishClaim').focus();}
+function closeClaimModal(){$('claimModal').classList.add('hidden');}
+function getClaimStatus(claim){return claim?.status||'confirmed';} // 舊版沒有 status 的核銷視為已完成，避免重複領點
+function makePending(p,t,branch,token,key){return {campaignId:CFG.campaignId,type:t,phone:p,branch,week:isoWeek(),createdAt:mode==='cloud'?firebase.firestore.FieldValue.serverTimestamp():new Date().toISOString(),logId:key,status:'pending',operatorUid:mode==='cloud'?user.uid:'DEMO',reservationId:token};}
+async function lookupMember(){
+  if(busy||verified)return;
+  try{requireActiveBranch();}catch(e){showFeedbackModal('館別權限不符',e.message,'error');return;}
+  const p=normalizedPhone($('phone').value),t=$('task').value,branch=$('branch').value;
+  if(!p){$('phone').value='';showFeedbackModal('手機號碼格式不正確','請輸入 09 開頭的 10 碼手機號碼。','error');return;}
+  if(!['CHECKIN','INBODY'].includes(t)){$('phone').value='';showFeedbackModal('請重新選擇集點項目','目前僅支援館內運動打卡及身體檢測。','error');return;}
+  lock(true);
+  try{
+    fresh();
+    const key=keyRestricted(t,p),token=crypto.randomUUID();let name='';
+    if(mode==='cloud'){
+      const mRef=db.collection('members').doc(p),cRef=db.collection('claims').doc(key);
+      await db.runTransaction(async tx=>{
+        const m=await tx.get(mRef),c=await tx.get(cRef);
+        if(!m.exists){const e=new Error('查無會員建檔');e.code='MEMBER_NOT_FOUND';throw e;}
+        if(c.exists){const v=c.data(),s=getClaimStatus(v);if(s==='confirmed')throw new Error(`此項目已在 ${v.branch||'其他館'} 完成登記，不得重複領取`);if(s==='pending')throw new Error(`此項目已由 ${v.branch||'其他館'} 預留，尚待確認 LINE 發點；請原操作人員完成或請主管核實後解除`);}
+        name=m.data().name||'未命名參加者';
+        tx.set(cRef,makePending(p,t,branch,token,key));
+      });
+    }else{
+      const m=store.members[p];if(!m){const e=new Error('查無會員建檔');e.code='MEMBER_NOT_FOUND';throw e;}
+      const v=store.claims[key];if(v){const s=getClaimStatus(v);if(s==='confirmed')throw new Error(`已在 ${v.branch||'其他館'} 完成登記，不得重複領取`);if(s==='pending')throw new Error(`目前由 ${v.branch||'其他館'} 預留資格，需先完成或取消`);}
+      name=m.name||'未命名參加者';store.claims[key]=makePending(p,t,branch,token,key);saveDemo();
+    }
+    verified={phone:p,type:t,branch,name,token,key};
+    $('phone').value=''; // 查驗完成立即清空，不等待櫃檯完成或取消
+    toast(`${name}｜${types[t]}：查驗通過，本次已保留 1 點資格。請出示現場 LINE QR Code。`,'ok');
+    showClaimModal();
+  }catch(e){
+    if(e?.code==='MEMBER_NOT_FOUND'||e?.message==='查無會員建檔')showFeedbackModal('查無會員建檔','此手機號碼目前不在全館共用會員名冊。請先在會員管理新增會員，再重新查詢。','warning');
+    else showFeedbackModal('無法領取點數',e?.message||String(e),'error');
+  }finally{$('phone').value='';lock(false);}
+}
+async function redeem(){
+  if(busy||!verified)return;
+  try{requireActiveBranch();}catch(e){showFeedbackModal('館別權限不符',e.message,'error');return;}
+  const {phone:p,type:t,branch,name,token,key}=verified;
+  if(!confirm(`只有在 LINE 已成功發放點數後，才能登記完成。\n\n${name}｜${types[t]}｜1 點\n${branch}\n\n確定 LINE 已成功發點？`))return;
+  lock(true);
+  try{
+    fresh();let finalName=name;
+    if(mode==='cloud'){
+      const cRef=db.collection('claims').doc(key),lRef=db.collection('logs').doc(key);
+      await db.runTransaction(async tx=>{
+        const c=await tx.get(cRef);
+        if(!c.exists||c.data().status!=='pending'||c.data().reservationId!==token||c.data().operatorUid!==user.uid)throw new Error('預留資格已改變或已被其他人處理，不能完成登記');
+        finalName=name;
+        tx.update(cRef,{status:'confirmed',confirmedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        tx.set(lRef,logData(t,finalName,p,1,{claimId:key,ref:''}));
+      });
+    }else{
+      const c=store.claims[key];if(!c||c.status!=='pending'||c.reservationId!==token)throw new Error('預留資格已變更，不能完成登記');
+      c.status='confirmed';c.confirmedAt=new Date().toISOString();store.logs[key]=logData(t,name,p,1,{claimId:key,ref:''});saveDemo();
+    }
+    verified=null;closeClaimModal();toast(`${finalName}｜${types[t]}：LINE 發點後的核銷紀錄已登記完成。`,'ok');showFeedbackModal('核銷登記完成',`${finalName}｜${types[t]}｜${branch}\n已確認 LINE 發放，系統記錄 1 點。`,'ok',[{label:'本次核銷',value:'1 點'}]);
+  }catch(e){fail(e,'modalError');}finally{lock(false);}
+}
+async function cancelReservation(){
+  if(busy||!verified)return;
+  try{requireActiveBranch();}catch(e){showFeedbackModal('館別權限不符',e.message,'error');return;}
+  const {key,token}=verified;
+  if(!confirm('請確認 LINE 尚未發放任何點數。取消後會解除資格保留；若 LINE 已發點，請改按「登記完成」。確定取消？'))return;
+  lock(true);
+  try{
+    fresh();
+    if(mode==='cloud'){
+      const cRef=db.collection('claims').doc(key);
+      await db.runTransaction(async tx=>{
+        const c=await tx.get(cRef);
+        if(!c.exists||c.data().status!=='pending'||c.data().reservationId!==token||c.data().operatorUid!==user.uid)throw new Error('無法取消：資格狀態或操作人員已變更');
+        tx.update(cRef,{status:'cancelled',cancelledAt:firebase.firestore.FieldValue.serverTimestamp()});
+      });
+    }else{
+      const c=store.claims[key];if(!c||c.status!=='pending'||c.reservationId!==token)throw new Error('資格已變更，無法取消');
+      c.status='cancelled';c.cancelledAt=new Date().toISOString();saveDemo();
+    }
+    verified=null;closeClaimModal();toast('已取消本次領點並解除資格保留；未記錄為已領點。','ok');showFeedbackModal('已取消本次領點','未發放 LINE 點數，也未登記為已核銷。','warning');
+  }catch(e){fail(e,'modalError');}finally{lock(false);}
+}
+async function loadPending(){
+  const el=$('pendingList');
+  if(!isManager()){el.textContent='僅主管可查詢及處理待確認領點';return;}
+  try{
+    fresh();let items=[];
+    if(mode==='cloud'){
+      const s=await db.collection('claims').where('status','==','pending').limit(100).get({source:'server'});
+      items=s.docs.map(d=>({key:d.id,...d.data()}));
+    }else items=Object.entries(store.claims).filter(([_,v])=>v.status==='pending').map(([key,v])=>({key,...v}));
+    el.replaceChildren();if(!items.length){el.textContent='目前沒有待確認領點。';return;}
+    const intro=document.createElement('p');intro.textContent=`目前查到 ${items.length} 筆待處理資格，請先與原操作人員確認 LINE 是否已發點。`;el.appendChild(intro);
+    for(const item of items){
+      const row=document.createElement('div');row.className='panel sub';
+      const desc=document.createElement('p');desc.textContent=`${item.phone}｜${types[item.type]||item.type}｜${item.branch}｜保留帳號：${item.operatorUid||'未知'}`;
+      const button=document.createElement('button');button.className='btn red';button.textContent='確認未發點，解除保留';
+      button.onclick=()=>releasePendingAdmin(item.key);
+      row.append(desc,button);el.appendChild(row);
+    }
+  }catch(e){el.textContent='載入失敗：'+e.message;}
+}
+async function releasePendingAdmin(key){
+  if(busy)return;
+  if(!isManager())return alert('僅主管可操作');
+  if(!confirm('重大操作：已向櫃檯確認 LINE 確實尚未發放點數，且應解除此筆預留？若已發點，請勿解除，避免重複領點。'))return;
+  lock(true);
+  try{
+    fresh();
+    if(mode==='cloud'){
+      const cRef=db.collection('claims').doc(key);
+      await db.runTransaction(async tx=>{
+        const c=await tx.get(cRef);
+        if(!c.exists||c.data().status!=='pending')throw new Error('該筆已不是待確認狀態');
+        tx.update(cRef,{status:'cancelled',cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),cancelledBy:user.uid});
+      });
+    }else{
+      const c=store.claims[key];if(!c||c.status!=='pending')throw new Error('該筆已不是待確認');c.status='cancelled';c.cancelledAt=new Date().toISOString();c.cancelledBy='DEMO';saveDemo();
+    }
+    await loadPending();
+  }catch(e){alert('解除失敗：'+e.message);}finally{lock(false);}
+}
+async function saveMember(){
+  try{
+    fresh();const name=tidyName($('memberName').value),p=normalizedPhone($('memberPhone').value);
+    if(!name||!p)throw new Error('請輸入姓名與有效的 10 碼手機');
+    if(!confirm(`確認新增會員？\n姓名：${name}\n手機：${p}\n\n若此手機已存在，系統會拒絕覆蓋原會員資料。`))return;
+    lock(true);
+    if(mode==='cloud'){
+      const ref=db.collection('members').doc(p);
+      await db.runTransaction(async tx=>{
+        const existing=await tx.get(ref);
+        if(existing.exists){const e=new Error('此手機已建檔。若需要更正姓名，請前往「後台管理 → 會員姓名修改」。');e.code='MEMBER_EXISTS';throw e;}
+        tx.set(ref,{name,phone:p,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid});
+      });
+    }else{
+      if(store.members[p]){const e=new Error('此手機已建檔，請到「後台管理 → 會員姓名修改」。');e.code='MEMBER_EXISTS';throw e;}
+      store.members[p]={name,phone:p};saveDemo();
+    }
+    $('memberName').value='';$('memberPhone').value='';
+    if(isStaff())$('memberFilter').value=p;
+    await searchMembers();
+    showFeedbackModal('新增會員成功',`已建立：${name}（${maskPhone(p)}）。手機為會員唯一識別鍵。`,'ok');
+  }catch(e){
+    if(e?.code==='MEMBER_EXISTS')showFeedbackModal('此手機已存在',e.message,'warning');
+    else showFeedbackModal('新增會員失敗',e?.message||String(e),'error');
+  }finally{lock(false);}
+}
+function invalidateMemberEdit(){
+  memberEditLookup=null;
+  $('memberEditFound').classList.add('hidden');
+  $('memberEditForm').classList.add('hidden');
+  $('memberEditNewName').value='';
+  $('memberEditStatus').textContent='請按「查詢現有姓名」確認會員身分。';
+}
+async function lookupMemberForEdit(){
+  if(busy)return;
+  const phone=normalizedPhone($('memberEditPhone').value);
+  invalidateMemberEdit();
+  if(!phone){$('memberEditStatus').textContent='請輸入有效的 10 碼手機號碼。';return;}
+  try{
+    fresh();lock(true);
+    const member=mode==='cloud'
+      ?(await db.collection('members').doc(phone).get({source:'server'}))
+      :null;
+    const data=mode==='cloud'?(member.exists?member.data():null):store.members[phone];
+    if(!data){$('memberEditStatus').textContent='查無此手機的會員資料。請先確認手機，若為新會員請至前台新增。';return;}
+    memberEditLookup={phone,name:String(data.name||'')};
+    $('memberEditCurrentName').textContent=memberEditLookup.name;
+    $('memberEditMaskedPhone').textContent='手機：'+maskPhone(phone);
+    $('memberEditFound').classList.remove('hidden');
+    $('memberEditStatus').textContent='已找到會員。確認姓名後，才可點選右側「修改姓名」。';
+  }catch(e){$('memberEditStatus').textContent='查詢失敗：'+(e?.message||String(e));}
+  finally{lock(false);}
+}
+function startMemberNameEdit(){
+  if(!memberEditLookup)return;
+  $('memberEditNewName').value=memberEditLookup.name;
+  $('memberEditForm').classList.remove('hidden');
+  $('memberEditNewName').focus();
+}
+function cancelMemberNameEdit(){
+  $('memberEditNewName').value='';
+  $('memberEditForm').classList.add('hidden');
+}
+async function confirmMemberNameEdit(){
+  if(busy||!memberEditLookup)return;
+  const {phone, name:oldName}=memberEditLookup;
+  const newName=tidyName($('memberEditNewName').value);
+  if(!newName){$('memberEditStatus').textContent='請輸入正確的新姓名。';return;}
+  if(newName===oldName){$('memberEditStatus').textContent='新姓名與原姓名相同，無需修改。';return;}
+  if(normalizedPhone($('memberEditPhone').value)!==phone){invalidateMemberEdit();return;}
+  if(!confirm(`請再次確認會員姓名更正：\n手機：${phone}\n原姓名：${oldName}\n新姓名：${newName}\n\n確定儲存？`))return;
+  try{
+    fresh();lock(true);
+    if(mode==='cloud'){
+      const ref=db.collection('members').doc(phone);
+      await db.runTransaction(async tx=>{
+        const snap=await tx.get(ref);
+        if(!snap.exists)throw new Error('會員已不存在，請重新查詢。');
+        if(String(snap.data().name||'')!==oldName)throw new Error('會員姓名已由其他操作員更新，請重新查詢確認最新資料。');
+        tx.update(ref,{name:newName,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid});
+      });
+    }else{
+      if(!store.members[phone])throw new Error('會員已不存在，請重新查詢。');
+      if(store.members[phone].name!==oldName)throw new Error('資料已變更，請重新查詢。');
+      store.members[phone].name=newName;saveDemo();
+    }
+    memberEditLookup={phone,name:newName};
+    $('memberEditCurrentName').textContent=newName;
+    cancelMemberNameEdit();
+    $('memberEditStatus').textContent='姓名修改成功，手機與核銷紀錄未變動。';
+    showFeedbackModal('會員姓名修改成功',`${oldName} → ${newName}\n手機：${maskPhone(phone)}\n既有核銷紀錄維持不變。`,'ok');
+  }catch(e){
+    $('memberEditStatus').textContent='修改未完成：'+(e?.message||String(e));
+    if(/已由其他操作員更新|已變更|已不存在/.test(String(e?.message||''))){
+      memberEditLookup=null;$('memberEditFound').classList.add('hidden');$('memberEditForm').classList.add('hidden');
+    }
+  }finally{lock(false);}
+}
+async function searchMembers(){
+  const filter=$('memberFilter').value.trim();
+  try{
+    let result=[];
+    if(mode==='cloud'){
+      fresh();
+      if(isStaff()){
+        const phone=normalizedPhone(filter);
+        if(!phone){$('memberList').innerHTML='<p class="info">一般員工請輸入完整 10 碼手機號碼查詢單筆會員；不提供整份名冊瀏覽。</p>';return;}
+        const s=await db.collection('members').doc(phone).get({source:'server'});
+        result=s.exists?[s.data()]:[];
+      }else{const s=await db.collection('members').limit(500).get({source:'server'});result=s.docs.map(x=>x.data());}
+    }else result=Object.values(store.members);
+    const match=isStaff()?result:result.filter(m=>!filter||String(m.name||'').includes(filter)||String(m.phone||'').includes(filter));
+    $('memberList').innerHTML=`<p class="info">顯示 ${match.length} 筆；員工限完整手機查詢單筆會員，主管預覽最多 500 筆。</p><table><thead><tr><th>姓名</th><th>手機</th></tr></thead><tbody>${match.map(m=>`<tr><td>${escapeHTML(m.name)}</td><td>${escapeHTML(maskPhone(m.phone))}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){$('memberList').textContent='查詢失敗：'+e.message;}
+}
+async function exportMembers(){
+  try{
+    if(!await requestExportPIN('全館會員名冊（手機號碼完整；不限館別）'))return;
+    requireManager();fresh();lock(true);
+    let all=[];
+    if(mode==='demo')all=Object.values(store.members||{});
+    else{
+      let after=null;
+      while(true){let q=db.collection('members').orderBy(firebase.firestore.FieldPath.documentId()).limit(400);
+        if(after)q=q.startAfter(after);
+        const snap=await q.get({source:'server'});all.push(...snap.docs.map(x=>x.data()));
+        if(snap.size<400)break;after=snap.docs[snap.docs.length-1];
+      }
+    }
+    all.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'zh-TW'));
+    writeExcelOrCSV(`GK_全館會員名冊_${taipeiDate()}`,['顧客名稱','手機'],all.map(x=>[x.name||'',x.phone||'']),[1]);
+    showFeedbackModal('會員名冊已匯出',`全館共用名冊，共 ${all.length} 筆；手機欄保留完整號碼。請妥善保管匯出檔。`,'ok');
+  }catch(e){showFeedbackModal('匯出失敗',e?.message||String(e),'error');}finally{lock(false);}
+}
+// v1.9: 每個館別獨立保存合約及課程來源，會員手機仍是全館唯一辨識鍵。
+function normContract(t){return String(t??'').trim().toUpperCase().replace(/\s+/g,'').slice(0,120);}
+async function contractDocId(contract,branch){return hash('GK-PT-CONTRACT|'+branch+'|'+normContract(contract));}
+function showPTResult(text){$('ptResult').textContent=text;}
+async function getMember(phone){
+  if(mode==='cloud'){const s=await db.collection('members').doc(phone).get({source:'server'});return s.exists?s.data():null;}
+  return store.members[phone]||null;
+}
+// v1.12: 教練課程以「館別 + 合約」為領點單位；不靠手機或姓名自動歸戶。
+async function loadPTBalances(branch,onlyPending=true){
+  requireActiveBranch();fresh();let out=[];
+  if(mode==='cloud'){
+    let cursor=null;while(true){
+      let q=db.collection('ptContractBalances').where('branch','==',branch).limit(250);
+      if(cursor)q=q.startAfter(cursor);
+      const snap=await q.get({source:'server'});
+      for(const doc of snap.docs){const b=doc.data();if(b.branch!==branch)continue;if(!onlyPending||Number(b.pending)>0)out.push({id:doc.id,...b});}
+      if(snap.size<250)break;cursor=snap.docs[snap.docs.length-1];
+    }
+  }else{
+    out=Object.entries(store.ptContractBalances||{}).map(([id,b])=>({id,...b})).filter(b=>b.branch===branch&&(!onlyPending||Number(b.pending)>0));
+  }
+  return out.filter(b=>Number.isInteger(Number(b.pending))&&Number(b.pending)>=0).sort((a,b)=>String(a.student).localeCompare(String(b.student),'zh-TW')||String(a.contract).localeCompare(String(b.contract)));
+}
+// 目前 ptContractBalances 只有每張合約的總點數；教練由原始逐堂簽到紀錄回查。
+// 舊版資料可能含已核銷的歷史教練，因此欄名使用「該合約簽到教練」而非「待領堂數所屬教練」。
+async function loadCoachesByBranch(branch){
+  requireActiveBranch();const groups=new Map();
+  const add=s=>{if(s.branch!==branch||!s.contractId||!s.coach)return;
+    if(!groups.has(s.contractId))groups.set(s.contractId,new Set());
+    groups.get(s.contractId).add(tidyName(s.coach));};
+  if(mode==='demo')Object.values(store.ptSessionsV2||{}).forEach(add);
+  else{
+    let after=null;
+    while(true){let q=db.collection('ptSessionsV2').where('branch','==',branch).limit(400);
+      if(after)q=q.startAfter(after);
+      const snap=await q.get({source:'server'});snap.docs.forEach(d=>add(d.data()));
+      if(snap.size<400)break;after=snap.docs[snap.docs.length-1];
+    }
+  }
+  return groups;
+}
+async function fetchUnclaimedWithCoaches(branch){
+  const balances=await loadPTBalances(branch);
+  const coaches=await loadCoachesByBranch(branch);
+  return balances.map(c=>({...c,coaches:[...(coaches.get(c.id)||[])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'zh-TW'))}));
+}
+function renderUnclaimed(){
+  const el=$('unclaimedList');if(unclaimedBranch!==$('branch').value){el.textContent='請先讀取本館清單。';return;}
+  const term=$('unclaimedFilter').value.trim().toLowerCase();
+  const list=unclaimedRows.filter(x=>!term||`${x.student} ${x.contract} ${(x.coaches||[]).join(" ")}`.toLowerCase().includes(term));
+  const points=list.reduce((sum,x)=>sum+Number(x.pending),0);
+  $('unclaimedStats').innerHTML=`<div class="stat">待領合約<b>${list.length}</b></div><div class="stat">待領堂數／點數<b>${points}</b></div><div class="stat">不同姓名<b>${new Set(list.map(x=>x.student)).size}</b><small>不等於實際人數</small></div>`;
+  if(!list.length){el.innerHTML='<div class="notice">本館沒有符合條件的待領課程。</div>';return;}
+  el.innerHTML=`<table class="unclaimed-table"><thead><tr><th>學員姓名</th><th>合約訂單編號</th><th>教練姓名</th><th>待領點數</th><th>操作</th></tr></thead><tbody>${list.map(c=>`<tr><td><div class="name">${escapeHTML(c.student)}</div></td><td>${escapeHTML(c.contract)}</td><td class="coaches-list">${escapeHTML((c.coaches||[]).join("、")||"未取得")}</td><td><span class="strong-point">${Number(c.pending)} 點</span></td><td><button class="btn primary" data-contract="${escapeHTML(c.contract)}" onclick="openPTFromUnclaimed(this.dataset.contract)">前往查詢</button></td></tr>`).join('')}</tbody></table>`;
+}
+async function loadUnclaimed(){
+  const branch=$('branch').value,token=++unclaimedRequest;
+  unclaimedBranch='';unclaimedRows=[];
+  $('unclaimedStatus').textContent=`正在查詢 ${branch}館的課程…`;
+  $('unclaimedList').textContent='';
+  try{
+    const rows=await fetchUnclaimedWithCoaches(branch);
+    if(token!==unclaimedRequest||branch!==$('branch').value)return;
+    unclaimedRows=rows;unclaimedBranch=branch;renderUnclaimed();
+    $('unclaimedStatus').textContent=`${branch}館有 ${rows.length} 張合約尚有未領課程點數，按合約分開列出。`;
+  }catch(e){if(token===unclaimedRequest){$('unclaimedStatus').textContent='讀取失敗：'+(e.message||e);$('unclaimedList').textContent='請檢查網路後重試。';}}
+}
+async function exportUnclaimed(){
+  try{
+    const branch=$('branch').value;
+    if(!await requestExportPIN(`${branch}館尚未領點課程清單`))return;
+    requireManager();fresh();lock(true);
+    const rows=await fetchUnclaimedWithCoaches(branch);
+    if($('branch').value!==branch)throw new Error('作業館別已切換，請重新執行匯出');
+    const keyword=$('unclaimedFilter').value.trim().toLowerCase();
+    const matched=rows.filter(x=>!keyword||`${x.student} ${x.contract} ${(x.coaches||[]).join(' ')}`.toLowerCase().includes(keyword));
+    const points=matched.reduce((s,x)=>s+Number(x.pending||0),0);
+    writeExcelOrCSV(`GK_${branch}館_課程待領_${taipeiDate()}`,
+      ['匯出日期','館別','學員姓名','合約訂單編號','該合約簽到教練','待領堂數','待領點數'],
+      matched.map(x=>[taipeiDate(),branch,x.student,x.contract,(x.coaches||[]).join('、')||'未取得',Number(x.pending),Number(x.pending)]));
+    showFeedbackModal('待領清單已匯出',`${branch}館共 ${matched.length} 張合約、${points} 點。教練欄列出該合約的簽到教練；同一合約可能有多位教練。`,'ok');
+  }catch(e){showFeedbackModal('匯出失敗',e?.message||String(e),'error');}finally{lock(false);}
+}
+async function openPTFromUnclaimed(contract){
+  if(unclaimedBranch!==$('branch').value)return;
+  tab('pt');$('ptQuery').value=contract;await searchPT();
+}
+async function searchPT(){
+  if(busy)return;
+  try{requireActiveBranch();}catch(e){showPTResult(e.message);return;}
+  ptSelection=null;ptSelected.clear();ptRows=[];ptLookupBranch='';
+  const term=$('ptQuery').value.trim().toLowerCase(),branch=$('branch').value;
+  if(term.length<2){$('ptResult').innerHTML='<div class="notice error">請至少輸入兩個字或兩碼合約編號。</div>';return;}
+  $('ptResult').textContent='正在查詢本館待領課程…';
+  try{
+    const all=await loadPTBalances(branch);
+    if(branch!==$('branch').value)return;
+    const found=all.filter(x=>String(x.student).toLowerCase().includes(term)||String(x.contract).toLowerCase().includes(term));
+    if(!found.length){$('ptResult').innerHTML=`<div class="notice">${escapeHTML(branch)}館沒有符合「${escapeHTML(term)}」且尚未領點的合約。請確認館別、搜尋條件與課程是否已匯入。</div>`;return;}
+    if(found.length>200){$('ptResult').innerHTML=`<div class="notice error">找到 ${found.length} 張合約，為避免勾錯，請輸入更完整的學員姓名或合約編號。</div>`;return;}
+    ptRows=found;ptLookupBranch=branch;
+    if(found.length===1)ptSelected.add(found[0].id);
+    renderPTSelection();
+  }catch(e){$('ptResult').textContent='課程查詢失敗：'+(e.message||e);}
+}
+function choosePTContract(el){
+  if(!ptRows.some(x=>x.id===el.dataset.id))return;
+  if(el.checked)ptSelected.add(el.dataset.id);else ptSelected.delete(el.dataset.id);
+  updatePTSelectionTotal();
+}
+function updatePTSelectionTotal(){
+  if(!ptLookupBranch||ptLookupBranch!==$('branch').value)return;
+  const selected=ptRows.filter(x=>ptSelected.has(x.id));
+  const total=selected.reduce((sum,x)=>sum+Number(x.pending),0);
+  $('ptChosenTotal').textContent=`${selected.length} 張合約，共 ${total} 點`;
+  const different=new Set(selected.map(x=>tidyName(x.student))).size>1;
+  $('ptSelectedWarning').textContent=different?'選取了不同姓名的合約，請分別核銷；目前禁止合併。':selected.length>1?'多張合約請確認是同一個學員，才能合併發點。':'請依合約編號核對實際上課者。';
+  if(selected.length>6){$('ptSelectedWarning').textContent='單次最多可核銷 6 張合約。請先選最多 6 張；其餘合約分批核銷。';}
+  $('ptProceedBtn').disabled=!selected.length||different||selected.length>6;
+}
+function renderPTSelection(){
+  const names=new Set(ptRows.map(x=>tidyName(x.student)));
+  $('ptResult').innerHTML=`<div class="panel sub"><div class="bar"><h3>找到 ${ptRows.length} 張本館待領合約</h3><span class="status">${escapeHTML(ptLookupBranch)}館</span></div><p class="info">核對後勾選要一次發點的合約；不同姓名禁止合併。同名不同合約也可能是不同人，<strong>不能直接全選</strong>。</p>${names.size<ptRows.length?'<div class="notice">同名學員出現多張合約，請依公司系統核對每張合約的實際持有人。</div>':''}<div class="scroll"><table class="contract-table"><thead><tr><th>選取</th><th>學員姓名</th><th>合約訂單編號</th><th>未領堂數／點數</th></tr></thead><tbody>${ptRows.map(c=>`<tr><td><input type="checkbox" style="width:23px;height:23px" data-id="${escapeHTML(c.id)}" onchange="choosePTContract(this)" ${ptSelected.has(c.id)?'checked':''} aria-label="選取合約 ${escapeHTML(c.contract)}"></td><td>${escapeHTML(c.student)}</td><td>${escapeHTML(c.contract)}</td><td><strong>${Number(c.pending)} 點</strong></td></tr>`).join('')}</tbody></table></div><div class="contract-summary" style="margin-top:16px"><div><div class="info">本次已選</div><strong id="ptChosenTotal">—</strong></div><button id="ptProceedBtn" class="btn primary" style="font-size:18px;padding:15px" onclick="startPTClaim()">核對完成 → 確認領點</button></div><p id="ptSelectedWarning" class="info"></p></div>`;
+  updatePTSelectionTotal();
+}
+function startPTClaim(){
+  if(busy||!ptSelected.size||ptLookupBranch!==$('branch').value)return;
+  const chosen=ptRows.filter(x=>ptSelected.has(x.id));
+  if(new Set(chosen.map(x=>tidyName(x.student))).size!==1){showFeedbackModal('不能合併不同姓名','請分開查詢及核銷。','warning');return;}
+  if(chosen.length>6){showFeedbackModal('一次最多 6 張合約','Firebase 核銷安全規則要求每張合約逐筆核對，請先分批選取。','warning');return;}
+  const total=chosen.reduce((sum,x)=>sum+Number(x.pending),0);
+  if(!Number.isInteger(total)||total<=0){showFeedbackModal('點數不正確','請重新查詢。','error');return;}
+  ptSelection={student:chosen[0].student,branch:ptLookupBranch,contracts:chosen.map(x=>({id:x.id,student:x.student,contract:x.contract,pending:Number(x.pending)})),total};
+  $('ptClaimPerson').textContent=ptSelection.student+'｜'+ptSelection.branch+'館';
+  $('ptClaimSummary').textContent=`${chosen.length} 張合約｜共 ${total} 點`;
+  $('ptClaimContracts').innerHTML=chosen.map(x=>`<div>${escapeHTML(x.contract)}：<b>${Number(x.pending)} 點</b></div>`).join('');
+  $('ptClaimModal').classList.remove('hidden');$('ptFinishBtn').focus();
+}
+function cancelPTClaim(){ptSelection=null;$('ptClaimModal').classList.add('hidden');}
+async function redeemSelectedPT(){
+  if(busy||!ptSelection)return;
+  try{requireActiveBranch();}catch(e){showFeedbackModal('館別權限不符',e.message,'error');return;}
+  const chosen=ptSelection;
+  if(chosen.branch!==$('branch').value){cancelPTClaim();showFeedbackModal('館別已更換','請重新查詢。','error');return;}
+  if(chosen.contracts.length>6){showFeedbackModal('單次最多 6 張合約','請分批核銷。此上限是為了讓 Firestore 能逐張驗證實際扣除點數。','error');return;}
+  if(!confirm(`請確認已核對下列合約均屬於同一位學員，且 LINE 確實已發點：\n\n${chosen.student}｜${chosen.branch}館\n${chosen.contracts.map(x=>x.contract+'：'+x.pending+' 點').join('\n')}\n\n合計 ${chosen.total} 點。確認登記嗎？`))return;
+  lock(true);
+  try{
+    fresh();const logId='pt__'+crypto.randomUUID();let points=0;
+    if(mode==='cloud'){
+      const refs=chosen.contracts.map(x=>db.collection('ptContractBalances').doc(x.id));
+      const logRef=db.collection('logs').doc(logId);
+      await db.runTransaction(async tx=>{
+        const snapshots=[];for(const ref of refs)snapshots.push(await tx.get(ref));
+        let sum=0;
+        for(let i=0;i<snapshots.length;i++){
+          const d=snapshots[i],old=chosen.contracts[i];
+          if(!d.exists||d.data().branch!==chosen.branch||d.data().contract!==old.contract||d.data().student!==chosen.student||Number(d.data().pending)!==old.pending)throw new Error('待領點數或合約資料已改變，請重新查詢');
+          sum+=old.pending;
+        }
+        if(sum!==chosen.total||sum<1)throw new Error('點數不一致，請重新查詢');
+        for(let i=0;i<refs.length;i++)tx.update(refs[i],{pending:0,redeemed:firebase.firestore.FieldValue.increment(chosen.contracts[i].pending),lastRedeemLogId:logId,lastRedeemPoints:chosen.contracts[i].pending,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        tx.set(logRef,logData('PT',chosen.student,'',sum,{claimId:logId,coach:'',contractIds:chosen.contracts.map(x=>x.id),contractPoints:chosen.contracts.map(x=>x.pending),ref:chosen.contracts.map(x=>x.contract).join('、')}));
+        points=sum;
+      });
+    }else{
+      for(const c of chosen.contracts){const current=store.ptContractBalances[c.id];if(!current||current.student!==c.student||current.branch!==chosen.branch||current.contract!==c.contract||Number(current.pending)!==c.pending)throw new Error('資料已變更，請重新查詢');}
+      points=chosen.total;
+      for(const c of chosen.contracts){const current=store.ptContractBalances[c.id];current.pending=0;current.redeemed=(Number(current.redeemed)||0)+c.pending;current.lastRedeemLogId=logId;current.lastRedeemPoints=c.pending;}
+      store.logs[logId]=logData('PT',chosen.student,'',points,{claimId:logId,coach:'',contractIds:chosen.contracts.map(x=>x.id),contractPoints:chosen.contracts.map(x=>x.pending),ref:chosen.contracts.map(x=>x.contract).join('、')});saveDemo();
+    }
+    cancelPTClaim();ptRows=[];ptSelected.clear();ptLookupBranch='';$('ptQuery').value='';
+    $('ptResult').textContent='本次已登記核銷，請輸入下一位學員姓名或合約編號。';
+    if(!$('view-unclaimed').classList.contains('hidden'))loadUnclaimed();
+    refreshStats();
+    showFeedbackModal('課程點數核銷完成',`${chosen.student}｜${chosen.branch}館\n已依 ${chosen.contracts.length} 張合約登記 LINE 發點完成。`,'ok',[{label:'已核銷',value:points+' 點'},{label:'合約',value:chosen.contracts.length+' 張'}]);
+  }catch(e){cancelPTClaim();ptRows=[];ptSelected.clear();$('ptResult').textContent='請重新查詢本館最新點數。';showFeedbackModal('核銷登記失敗',e.message||String(e),'error');}
+  finally{lock(false);}
+}
+
+function col(headers,terms){return headers.findIndex(x=>terms.some(z=>String(x).toLowerCase().includes(z.toLowerCase())));}
+async function readSheet(input){if(typeof XLSX==='undefined')throw new Error('Excel 解析器尚未載入，請檢查網路');const f=$(input).files[0];if(!f)throw new Error('請先選擇 Excel／CSV 檔案');const data=await f.arrayBuffer();const book=XLSX.read(data,{type:'array'});return XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:'',raw:false});}
+async function importMemberFile(){try{requireManager();fresh();const rows=await readSheet('memberFile');const heads=rows[0]||[],p=col(heads,['手機','電話','phone']),n=col(heads,['顧客名稱','姓名','name']);if(p<0||n<0)throw new Error('名冊須包含手機與姓名欄位');if(col(heads,['教練','簽到時間'])>=0)throw new Error('這看起來是教練簽到表，禁止當作會員名冊匯入');const map=new Map();let skipped=0;for(const r of rows.slice(1)){const phone=normalizedPhone(r[p]),name=tidyName(r[n]);if(phone&&name)map.set(phone,{phone,name});else skipped++;}if(!map.size)throw new Error('沒有符合格式的會員');if(!confirm(`準備匯入 ${map.size} 筆有效會員（略過 ${skipped} 筆）。\n不刪除原有會員與核銷紀錄，確認執行？`))return;lock(true);let done=0;for(let i=0;i<map.size;i+=300){const chunk=[...map.values()].slice(i,i+300);if(mode==='cloud'){const batch=db.batch();for(const x of chunk)batch.set(db.collection('members').doc(x.phone),{...x,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await batch.commit();}else for(const x of chunk)store.members[x.phone]={...(store.members[x.phone]||{}),...x};done+=chunk.length;$('importResult').textContent=`已確認儲存 ${done}/${map.size} 筆`; }if(mode==='demo')saveDemo();$('memberFile').value='';$('importResult').textContent=`會員名冊匯入完成：${done} 筆，略過 ${skipped} 筆。名冊僅供打卡與身體檢測查驗，不影響課程點數。`;showFeedbackModal('會員名冊匯入完成','手機名冊只用於全館打卡及身體檢測；課程執行不需要會員名冊。','ok',[{label:'成功寫入',value:done},{label:'無效略過',value:skipped}]);}catch(e){fail(e,'importResult');showFeedbackModal('會員名冊匯入未完成',e?.message||String(e),'error');}finally{lock(false);}}
+// 用原始 11 欄報表保留合約編號；舊版雙區報表若沒有合約欄位則跳過不發點。
+function extractCourseRows(rows){
+  const h=(rows[0]||[]).map(x=>String(x||'').trim());
+  const at=terms=>col(h,terms);
+  const is11=at(['合約訂單編號','合約編號','訂單編號'])>=0&&at(['顧客姓名','顧客名稱','學員姓名'])>=0;
+  const results=[];let invalid=0;
+  if(is11){
+    const dateI=at(['課程日期']),timeI=at(['簽到時間']),coachI=at(['教練姓名','教練']),studentI=at(['顧客姓名','顧客名稱','學員姓名']),contractI=at(['合約訂單編號','合約編號','訂單編號']),kindI=at(['課程類別']);
+    for(const r of rows.slice(1)){
+      const time=String(r[timeI]||'').trim(),date=dateI>=0?String(r[dateI]||'').trim():'',coach=tidyName(r[coachI]),student=tidyName(r[studentI]),contract=normContract(r[contractI]),kind=kindI>=0?String(r[kindI]||'').trim():'私教';
+      if(!time||!coach||!student||!contract){invalid++;continue;}
+      results.push({contract,student,coach,time,date,kind});
+    }
+  }else{
+    // 舊式兩區報表：各區必須能找出對應合約號碼，否則跳過，避免將同名會員混合。
+    for(const [base,end,kind] of [[0,9,'私教'],[9,h.length,'小班制']]){
+      const within=(k)=>{for(let i=base;i<end;i++)if(k.some(t=>h[i]?.includes(t)))return i;return -1;};
+      const timeI=within(['簽到時間']),coachI=within(['教練']),studentI=within(['顧客','姓名','學員']),contractI=within(['合約訂單編號','合約編號','訂單編號']);
+      if(timeI<0||coachI<0||studentI<0||contractI<0)continue;
+      for(const r of rows.slice(1)){
+        const time=String(r[timeI]||'').trim(),coach=tidyName(r[coachI]),student=tidyName(r[studentI]),contract=normContract(r[contractI]);
+        if(!time||!coach||!student||!contract){invalid++;continue;}
+        results.push({contract,student,coach,time,date:'',kind});
+      }
+    }
+  }
+  return {results,invalid,is11};
+}
+async function importPTFile(){
+  let locked=false;
+  try{
+    requireManager();fresh();const rows=await readSheet('ptFile');
+    if(col(rows[0]||[],['教練'])<0)throw new Error('缺少教練姓名欄位，這不是課程執行報表');
+    const {results,invalid,is11}=extractCourseRows(rows);
+    if(!results.length)throw new Error('沒有可匯入且具合約訂單編號的有效課程；請檢查報表欄位。無合約編號的課程不能安全歸戶。');
+    const branch=$('branch').value;
+    if(!confirm(`【${branch}館】偵測 ${results.length} 堂有效簽到（${invalid} 列資料不完整已排除）。\n將依「館別＋合約編號＋學員＋教練＋簽到時間」去重。\n課程不需會員名冊或手機，領點時依合約編號核對。繼續？`))return;
+    lock(true);locked=true;let added=0,duplicate=0,error=0;const exceptions=[];
+    for(const [i,s] of results.entries()){
+      const id=await contractDocId(s.contract,branch),fp=await hash([branch,s.contract,s.student,s.coach,s.time,s.date,s.kind].join('|'));
+      try{
+        if(mode==='cloud'){
+          const seen=db.collection('ptSessionsV2').doc(fp),bal=db.collection('ptContractBalances').doc(id);
+          const didInsert=await db.runTransaction(async tx=>{
+            const [old,b]=await Promise.all([tx.get(seen),tx.get(bal)]);
+            if(old.exists)return false;
+            if(b.exists&&(b.data().student!==s.student||b.data().contract!==s.contract||b.data().branch!==branch))throw new Error('同一合約出現不同學員或合約資料不一致，已停止該筆');
+            tx.set(seen,{...s,branch,contractId:id,importedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            if(b.exists)tx.update(bal,{pending:firebase.firestore.FieldValue.increment(1),total:firebase.firestore.FieldValue.increment(1),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            else tx.set(bal,{contract:s.contract,student:s.student,branch,total:1,pending:1,redeemed:0,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            return true;
+          });
+          didInsert?added++:duplicate++;
+        }else{
+          if(store.ptSessionsV2[fp]){duplicate++;continue;}
+          const b=store.ptContractBalances[id];
+          if(b&&(b.student!==s.student||b.contract!==s.contract||b.branch!==branch))throw new Error('同一合約對應不同學員，已跳過');
+          store.ptSessionsV2[fp]={...s,branch,contractId:id};
+          if(!b)store.ptContractBalances[id]={contract:s.contract,student:s.student,branch,total:0,pending:0,redeemed:0};
+          store.ptContractBalances[id].total++;store.ptContractBalances[id].pending++;added++;
+        }
+      }catch(e){error++;if(exceptions.length<5)exceptions.push(`${s.contract}：${e.message||String(e)}`);}
+      if(i%20===0)$('importResult').textContent=`匯入進度 ${i+1}/${results.length}｜新增 ${added}｜重複 ${duplicate}｜異常 ${error}`;
+    }
+    if(mode==='demo')saveDemo();
+    $('ptFile').value=''; // 這次匯入作業已完成；讓下一份檔案可以直接選取
+    $('importResult').textContent=`${branch}館課程匯入：新增 ${added} 堂，重複 ${duplicate} 堂，異常 ${error+invalid} 列。請至「本館課程待領清單」查詢。`;
+    showFeedbackModal(error||invalid?'課程匯入部分完成':'課程匯入完成',`${branch}館課程按合約累計，每堂有效簽到 1 點，不需手機或歸戶。${exceptions.length?'\n異常：'+exceptions.join('；'):''}`,error||invalid?'warning':'ok',[
+      {label:'新增有效堂數',value:added},{label:'略過重複',value:duplicate},{label:'資料異常',value:error+invalid}
+    ]);
+  }catch(e){$('importResult').textContent='匯入失敗：'+(e.message||String(e));showFeedbackModal('課程匯入未完成',e.message||String(e),'error');}
+  finally{if(locked)lock(false);}
+}
+
+function timestamp(v){if(!v)return '';if(v.toDate)return v.toDate().toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});return new Date(v).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});}
+function filterLog(l){return (!$('logBranch').value||l.branch===$('logBranch').value)&&(!$('logType').value||l.type===$('logType').value)&&(!$('logFrom').value||l.date>=$('logFrom').value)&&(!$('logTo').value||l.date<=$('logTo').value);}
+function logTable(items){return `<table><thead><tr><th>核銷日期</th><th>館別</th><th>姓名</th><th>手機</th><th>項目</th><th>點數</th><th>教練／單號</th><th>操作帳號</th></tr></thead><tbody>${items.map(x=>`<tr><td>${escapeHTML(timestamp(x.createdAt))}</td><td>${escapeHTML(x.branch)}</td><td>${escapeHTML(x.name)}</td><td>${escapeHTML(maskPhone(x.phone))}</td><td>${escapeHTML(types[x.type]||x.type)}</td><td>${Number(x.points)||0}</td><td>${escapeHTML(x.coach||x.ref||'')}</td><td>${escapeHTML(x.operator)}</td></tr>`).join('')}</tbody></table>`;}
+async function loadLogs(reset=true){try{fresh();if(reset){logCursor=null;loadedLogs=[];}let arr=[];if(mode==='cloud'){let query=db.collection('logs').orderBy('createdAt','desc').limit(100);if(logCursor)query=query.startAfter(logCursor);const snap=await query.get({source:'server'});arr=snap.docs.map(x=>({id:x.id,...x.data()}));logCursor=snap.docs[snap.docs.length-1]||null;logHasMore=snap.size===100;}else{const all=Object.entries(store.logs).map(([id,x])=>({id,...x})).sort((a,b)=>timestamp(b.createdAt).localeCompare(timestamp(a.createdAt)));arr=all.slice(loadedLogs.length,loadedLogs.length+100);logHasMore=loadedLogs.length+arr.length<all.length;}loadedLogs.push(...arr);const match=loadedLogs.filter(filterLog);$('logList').innerHTML=logTable(match);$('logsSummary').textContent=`目前已載入 ${loadedLogs.length} 筆；符合篩選 ${match.length} 筆。若要完整查詢請使用 CSV 全部匯出。`;$('moreLogsBtn').disabled=!logHasMore;}catch(e){$('logsSummary').textContent='核銷資料讀取失敗：'+e.message;}}
+function csvCell(x){const s=String(x??'');return '"'+(/[=+\-@]/.test(s.charAt(0))?"'"+s:s).replace(/"/g,'""')+'"';}
+function downloadCSV(rows,scopeLabel){const columns=['createdAt','branch','name','phone','type','points','week','coach','ref','operator','id'];const names=['核銷時間','館別','會員姓名','會員手機','任務項目','點數','週次','教練','交易編號','操作帳號','流水ID'];const out=[names.map(csvCell).join(',')];for(const x of rows){const o={...x,type:types[x.type]||x.type,createdAt:timestamp(x.createdAt)};out.push(columns.map(k=>csvCell(o[k])).join(','));}const blob=new Blob(['\ufeff'+out.join('\r\n')],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`GK_${scopeLabel}_核銷紀錄_${taipeiDate()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+async function exportLogs(){
+  let locked=false;
+  try{
+    // 選定範圍必須取自「全館核銷後台」的篩選欄位，而非頁首作業館別。
+    const filters={
+      branch:$('logBranch').value,
+      type:$('logType').value,
+      from:$('logFrom').value,
+      to:$('logTo').value
+    };
+    if(filters.from && filters.to && filters.from>filters.to)throw new Error('開始日期不能晚於結束日期');
+    const scope=filters.branch?filters.branch+'館':'全館';
+    if(!await requestExportPIN(`${scope}核銷紀錄（依目前館別／項目／日期篩選）`))return;
+    requireManager();fresh();lock(true);locked=true;
+    let arr=[];
+    if(mode==='demo')arr=Object.entries(store.logs).map(([id,x])=>({id,...x}));
+    else{
+      let last=null;
+      while(true){
+        let q=db.collection('logs');
+        // 「全部館別」不加入 branch 條件；單一館別才由雲端先過濾。
+        if(filters.branch)q=q.where('branch','==',filters.branch);
+        q=q.limit(400);
+        if(last)q=q.startAfter(last);
+        const s=await q.get({source:'server'});
+        arr.push(...s.docs.map(x=>({id:x.id,...x.data()})));
+        $('logsSummary').textContent=`正在匯出 ${scope}：已取得 ${arr.length} 筆`;
+        if(s.size<400)break;
+        last=s.docs[s.docs.length-1];
+      }
+    }
+    // 查詢期間若篩選被調整，停止匯出，避免下載內容與顯示條件不一致。
+    if($('logBranch').value!==filters.branch || $('logType').value!==filters.type ||
+       $('logFrom').value!==filters.from || $('logTo').value!==filters.to)
+      throw new Error('核銷篩選條件已變更，請重新執行匯出');
+    const match=arr.filter(l=>(!filters.branch||l.branch===filters.branch)
+      &&(!filters.type||l.type===filters.type)
+      &&(!filters.from||l.date>=filters.from)
+      &&(!filters.to||l.date<=filters.to));
+    // CSV 以核銷時間新到舊排列，而不依 Firestore 文件 ID 排序。
+    const ms=x=>x?.toMillis?.()??Date.parse(x||'')??0;
+    match.sort((a,b)=>(ms(b.createdAt)||0)-(ms(a.createdAt)||0));
+    downloadCSV(match,scope);
+    $('logsSummary').textContent=`已匯出 ${scope} ${match.length} 筆核銷紀錄（依館別／項目／日期篩選，手機為完整號碼）。`;
+  }catch(e){$('logsSummary').textContent='匯出失敗：'+e.message;}
+  finally{if(locked)lock(false);}
+}
+
+
+// v1.14: 管理員邀請員工、管理既有員工。只建立「staff」，不開放自行新增 admin。
+async function inviteStaff(){
+  try{
+    requireManager();fresh();
+    const email=normalizeEmail($('inviteEmail').value),branch=$('inviteBranch').value;
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||!CFG.branches.includes(branch))throw new Error('請輸入有效電子郵件與館別');
+    if(!confirm(`建立 ${email} 的 ${branch}館員工邀請，並自動寄送啟用 Email？`))return;
+    const id=await hash('GK-STAFF-INVITE|'+email);
+    const ref=db.collection('staffInvites').doc(id);
+    const doc=await ref.get({source:'server'});
+    if(doc.exists)throw new Error('這個信箱已有邀請紀錄。請在清單中查看狀態或重新寄送，不要重複建檔。');
+    await ref.set({email,branch,status:'pending',createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    $('inviteEmail').value='';
+    // 邀請寫入成功後才寄信；如果寄送失敗，保留待處理邀請以供重寄。
+    try{
+      await auth.sendSignInLinkToEmail(email,inviteEmailActionSettings());
+      $('inviteStatus').textContent='邀請已建立，Firebase 已接受寄送啟用 Email 的要求。請員工查看收件匣與垃圾郵件。';
+    }catch(mailError){
+      $('inviteStatus').textContent='邀請已建立，但寄信失敗：'+mailError.message+'。請先確認 Firebase 已啟用「電子郵件連結（無密碼登入）」，再使用清單的「重寄 Email」。';
+    }
+    await loadStaffAdmin();
+  }catch(e){$('inviteStatus').textContent='建立失敗：'+(e.message||e);}
+}
+async function resendStaffInvite(inviteId,email){
+  try{
+    requireManager();fresh();
+    const ref=db.collection('staffInvites').doc(inviteId);
+    const snap=await ref.get({source:'server'});
+    if(!snap.exists||snap.data().status!=='pending'||snap.data().email!==email)throw new Error('邀請不是待啟用狀態，已不能重寄');
+    if(!confirm(`重新寄送啟用 Email 到 ${email}？`))return;
+    await auth.sendSignInLinkToEmail(email,inviteEmailActionSettings());
+    $('inviteStatus').textContent='Firebase 已接受重寄邀請信的要求。';
+  }catch(e){$('inviteStatus').textContent='重寄失敗：'+(e.message||e);}
+}
+async function revokeInvite(id){
+  try{
+    requireManager();fresh();
+    if(!confirm('確定撤銷這個尚未使用的員工邀請？'))return;
+    await db.collection('staffInvites').doc(id).update({status:'revoked',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await loadStaffAdmin();
+  }catch(e){alert('撤銷失敗：'+e.message);}
+}
+async function updateStaffAccess(uid,currentBranch,currentEnabled){
+  try{
+    requireManager();fresh();
+    const sel=$('staffBranch_'+uid),branch=sel.value,enabled=$('staffEnabled_'+uid).checked;
+    if(!CFG.branches.includes(branch))throw new Error('無效館別');
+    if(branch===currentBranch && enabled===currentEnabled)return;
+    if(!confirm(`確定修改這位員工：\n館別：${branch}\n權限：${enabled?'啟用':'停用'}？`))return;
+    await db.collection('users').doc(uid).update({branch,enabled,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await loadStaffAdmin();
+  }catch(e){alert('更新失敗：'+e.message);}
+}
+async function loadStaffAdmin(){
+  if(mode!=='cloud'||!isManager())return;
+  $('inviteList').textContent='正在讀取邀請…';$('staffUserList').textContent='正在讀取員工…';
+  try{
+    fresh();
+    const [a,b]=await Promise.all([db.collection('staffInvites').limit(300).get({source:'server'}),db.collection('users').limit(300).get({source:'server'})]);
+    const invites=a.docs.map(d=>({id:d.id,...d.data()})).sort((x,y)=>String(x.email).localeCompare(String(y.email)));
+    $('inviteList').innerHTML=invites.length?`<table><thead><tr><th>信箱</th><th>館別</th><th>狀態</th><th>操作</th></tr></thead><tbody>${invites.map(i=>`<tr><td>${escapeHTML(i.email)}</td><td>${escapeHTML(i.branch)}</td><td>${escapeHTML(i.status==='claimed'?'已啟用':i.status==='revoked'?'已撤銷':'待註冊驗證')}</td><td>${i.status==='pending'?`<button class="btn" data-invite-id="${escapeHTML(i.id)}" data-invite-email="${escapeHTML(i.email)}" onclick="resendStaffInvite(this.dataset.inviteId,this.dataset.inviteEmail)">重寄 Email</button> <button class="btn" data-invite-id="${escapeHTML(i.id)}" onclick="revokeInvite(this.dataset.inviteId)">撤銷邀請</button>`:'—'}</td></tr>`).join('')}</tbody></table>`:'尚無邀請';
+    const people=b.docs.filter(d=>d.data().role==='staff').map(d=>({uid:d.id,...d.data()})).sort((x,y)=>String(x.email||x.uid).localeCompare(String(y.email||y.uid)));
+    $('staffUserList').innerHTML=people.length?`<table><thead><tr><th>員工</th><th>館別</th><th>啟用狀態</th><th>操作</th></tr></thead><tbody>${people.map(p=>`<tr><td>${escapeHTML(p.email||'未記錄信箱（舊測試帳號）')}<small style="display:block">${escapeHTML(p.uid)}</small></td><td><select id="staffBranch_${escapeHTML(p.uid)}">${CFG.branches.map(v=>`<option value="${escapeHTML(v)}" ${v===p.branch?'selected':''}>${escapeHTML(v)}</option>`).join('')}</select></td><td><label><input id="staffEnabled_${escapeHTML(p.uid)}" type="checkbox" style="width:auto" ${p.enabled?'checked':''}> 啟用</label></td><td><button class="btn primary" data-staff-uid="${escapeHTML(p.uid)}" data-branch="${escapeHTML(p.branch)}" data-enabled="${p.enabled?'1':'0'}" onclick="updateStaffAccess(this.dataset.staffUid,this.dataset.branch,this.dataset.enabled==='1')">儲存變更</button></td></tr>`).join('')}</tbody></table>`:'目前沒有員工帳號';
+  }catch(e){$('inviteList').textContent='讀取失敗：'+e.message;$('staffUserList').textContent='請確認 Firestore 權限並重新整理。';}
+}
+
+async function refreshStats(){
+  if(!$('stats'))return;let mc='—',pt='—';
+  if(mode==='demo'){
+    mc=Object.keys(store.members||{}).length;
+    pt=Object.values(store.ptContractBalances||{}).filter(v=>v.branch===$('branch').value).reduce((n,v)=>n+(Number(v.pending)||0),0);
+  }
+  $('stats').innerHTML=`<div class="stat">跨館打卡限制<b>每週 1 次</b><small>全館共同核銷</small></div><div class="stat">身體檢測限制<b>活動 1 次</b><small>全館不得重複領取</small></div><div class="stat">${mode==='demo'?'示範會員數':'會員名冊'}<b>${mc}</b><small>僅用於打卡及檢測</small></div><div class="stat">本館課程待領點數<b>${pt}</b><small>${mode==='cloud'?'請到待領清單取得最新數字':'不需會員歸戶'}</small></div>`;
+}
+
+// 員工從 Email 直接打開網站時，無須再點「進入雲端測試」。
+if(typeof firebase!=='undefined' && configured()){
+  try {
+    if(!firebase.apps.length) firebase.initializeApp(CFG.firebase);
+    if(firebase.auth().isSignInWithEmailLink(window.location.href)) startCloud();
+  } catch(error) { console.error('GK Firebase 連線初始化失敗：',error); }
+}
+</script>
+</body></html>
