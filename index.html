@@ -116,7 +116,7 @@ fieldset[disabled]{opacity:.55}
 @media(max-width:560px){.primary-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.primary-nav .tab{padding:11px 6px;font-size:13px}.backend-panel{padding:13px}.backend-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.backend-tab{font-size:13px;padding:10px 6px}}
 </style>
 </head><body>
-<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式版 v1.14.11</small></div><div class="buttons"><span id="status" class="status">正在連線</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
+<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式版 v1.14.12</small></div><div class="buttons"><span id="status" class="status">正在連線</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
 <main>
 <div id="banner" class="notice hidden" role="alert"></div>
 <section class="panel hidden" id="modePanel"><h2>連線異常</h2><p class="info">請確認網路連線；若問題持續，請通知系統管理員。</p><div class="buttons"><button class="btn primary" onclick="location.reload()">重新連線</button></div></section>
@@ -1290,9 +1290,21 @@ async function inviteStaff(){
     const label=inviteRole==='branch_manager'?'館主管':'一般員工';
     if(!confirm(`建立 ${email} 的 ${branch}館${label}邀請，並寄送啟用 Email？`))return;
     const id=await hash('GK-STAFF-INVITE|'+email),ref=db.collection('staffInvites').doc(id);
-    const doc=await ref.get({source:'server'});
-    if(doc.exists)throw new Error('此信箱已有邀請紀錄。若已是員工，總管理員可以直接調整角色；待啟用可重寄 Email。');
-    await ref.set({email,branch,role:inviteRole,status:'pending',createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    // v1.14.12: 館主管不得讀取其他館邀請，連「尚不存在的文件」也無法先 get。
+    // 直接嘗試 create：由 Firestore 規則確保僅能建立本館 staff 邀請；既存文件則因 update 被拒絕。
+    // 總管理員仍可預先查重，提供較清楚的既有邀請提示。
+    if(isAdmin()){
+      const doc=await ref.get({source:'server'});
+      if(doc.exists)throw new Error('此信箱已有邀請紀錄。若已是員工，總管理員可以直接調整角色；待啟用可重寄 Email。');
+    }
+    try{
+      await ref.set({email,branch,role:inviteRole,status:'pending',createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    }catch(writeError){
+      if(isBranchManager() && writeError.code==='permission-denied'){
+        throw new Error('無法新增邀請：此 Email 可能已有邀請紀錄，或館別權限不符。請由總管理員確認。');
+      }
+      throw writeError;
+    }
     $('inviteEmail').value='';
     try{
       await auth.sendSignInLinkToEmail(email,inviteEmailActionSettings());
