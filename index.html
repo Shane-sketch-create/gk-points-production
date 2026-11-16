@@ -116,11 +116,11 @@ fieldset[disabled]{opacity:.55}
 @media(max-width:560px){.primary-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.primary-nav .tab{padding:11px 6px;font-size:13px}.backend-panel{padding:13px}.backend-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.backend-tab{font-size:13px;padding:10px 6px}}
 </style>
 </head><body>
-<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式版 v1.14.9</small></div><div class="buttons"><span id="status" class="status">正在連線</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
+<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式版 v1.14.10</small></div><div class="buttons"><span id="status" class="status">正在連線</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
 <main>
 <div id="banner" class="notice hidden" role="alert"></div>
 <section class="panel hidden" id="modePanel"><h2>連線異常</h2><p class="info">請確認網路連線；若問題持續，請通知系統管理員。</p><div class="buttons"><button class="btn primary" onclick="location.reload()">重新連線</button></div></section>
-<section id="loginPanel" class="panel hidden"><div id="normalLoginFields"><h2>員工登入</h2><div class="grid"><div><label>員工 Email<input type="email" id="email" autocomplete="username" placeholder="staff@example.com"></label></div><div><label>密碼<input type="password" id="password" autocomplete="current-password" placeholder="Firebase Authentication 密碼"></label></div></div><button class="btn primary" onclick="login()">登入系統</button><p class="info">既有帳號請直接登入。新員工由主管建立邀請並寄送 Email；收到信後點擊啟用連結，直接設定自己的密碼。</p></div>
+<section id="loginPanel" class="panel hidden"><div id="normalLoginFields"><h2>員工登入</h2><div class="grid"><div><label>員工 Email<input type="email" id="email" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="staff@example.com"></label></div><div><label>密碼<input type="password" id="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="請重新輸入登入密碼"></label></div></div><button class="btn primary" onclick="login()">登入系統</button><p class="info">登出後會清空登入欄位；登入時須重新輸入密碼，不接受瀏覽器預填密碼直接登入。共用電腦請勿儲存密碼。</p><p class="info">既有帳號請直接登入。新員工由主管建立邀請並寄送 Email；收到信後點擊啟用連結，直接設定自己的密碼。</p></div>
 <div class="panel sub hidden" id="inviteActivationBox"><h2>啟用 GK 員工帳號</h2><p class="info">這是員工專用啟用表單，不需要輸入主管帳號。請填寫「收到這封信的員工 Email」，再設定密碼。</p><div class="grid"><label>受邀員工 Email<input type="email" id="activationEmail" placeholder="請填收到邀請的員工信箱" autocomplete="off" autocapitalize="none" spellcheck="false"></label><label>新員工登入密碼（至少 8 字元）<input type="password" id="activationPassword" placeholder="員工自行設定，請勿使用主管密碼" autocomplete="new-password"></label></div><button class="btn primary" id="activateButton" onclick="activateInvitedStaff()">驗證信箱並啟用帳號</button><p id="activationStatus" class="info" aria-live="polite"></p><button class="btn" type="button" onclick="backToRegularGKLogin()">已經設定過密碼？改用一般登入</button></div></section>
 <div id="app" class="hidden">
 <section class="panel"><div class="branch-bar"><label for="branch" class="branch-label">作業館別</label><div class="branch-select-wrap"><select id="branch" class="branch-select" onchange="branchChanged()" aria-label="作業館別"></select></div></div><p class="info branch-help">會員名冊與打卡／檢測限次紀錄全館共用；課程執行紀錄依館別與合約管理，無須先歸戶。</p><div class="grid" id="stats"><div class="stat">運動打卡：每週 1 次（全館共用）</div><div class="stat">身體檢測：每活動 1 次（全館共用）</div></div></section>
@@ -393,11 +393,50 @@ function tab(name){if(['import','logs','staff-admin'].includes(name)&&!isManager
 function startDemo(){mode='demo';role='admin';try{Object.assign(store,JSON.parse(localStorage.getItem(CFG.demoStorageKey)||'{}'));}catch(e){};for(const k of ['ptSessionsV2','ptContractBalances','ptContractBindings'])store[k]=store[k]||{};if(!Object.keys(store.members||{}).length){store.members={'0911111111':{name:'示範會員甲',phone:'0911111111'},'0922222222':{name:'示範會員乙',phone:'0922222222'}};saveDemo();}setStatus('本機示範｜不跨裝置');$('banner').textContent='本機示範模式：僅使用虛構資料。沒有跨電腦同步，請勿輸入真實會員資料或用於正式核銷。';initApp();}
 function saveDemo(){localStorage.setItem(CFG.demoStorageKey,JSON.stringify(store));refreshStats();}
 function configured(){return !!(CFG&&CFG.firebase&&CFG.firebase.apiKey&&CFG.firebase.projectId&&CFG.firebase.apiKey!=='REPLACE_ME'&&CFG.firebase.projectId!=='REPLACE_ME');}
+// v1.14.10：登出清空帳密；拒絕僅靠瀏覽器自動填入密碼的一鍵登入。
+// 網站無法刪除 Chrome/Edge 密碼管理工具內的儲存密碼，共用電腦須另行停用/移除。
+let passwordManuallyEntered=false;
+function clearLoginCredentials(){
+  const email=$('email'),password=$('password');
+  if(email){email.value='';email.defaultValue='';}
+  if(password){password.value='';password.defaultValue='';}
+  passwordManuallyEntered=false;
+}
+function trackPasswordEntry(){
+  const password=$('password');
+  // 點進密碼欄時清除可能由瀏覽器補上的舊密碼。
+  password.addEventListener('focus',()=>{if(!passwordManuallyEntered)password.value='';});
+  password.addEventListener('keydown',event=>{
+    if(!event.isTrusted||event.ctrlKey||event.altKey||event.metaKey)return;
+    if(event.key&&event.key.length===1){
+      if(!passwordManuallyEntered)password.value='';
+      passwordManuallyEntered=true;
+    }
+  });
+  password.addEventListener('paste',event=>{
+    if(!event.isTrusted)return;
+    if(!passwordManuallyEntered)password.value='';
+    passwordManuallyEntered=true;
+  });
+  // 手機虛擬鍵盤與輸入法可能沒有標準 keydown。
+  password.addEventListener('beforeinput',event=>{
+    if(!event.isTrusted)return;
+    if(!['insertText','insertCompositionText'].includes(event.inputType))return;
+    if(!passwordManuallyEntered)password.value='';
+    passwordManuallyEntered=true;
+  });
+}
+trackPasswordEntry();
+// 從瀏覽器上一頁/下一頁還原時，不能保留先前的登入欄位內容。
+window.addEventListener('pageshow',()=>{
+  if(!auth?.currentUser)clearLoginCredentials();
+});
 function startCloud(){
   if(!configured()){setStatus('設定異常');toast('Firebase 連線設定不完整，請通知系統管理員。','error','banner');$('modePanel').classList.remove('hidden');return;}
   try{
     if(firebase.apps.length)firebase.app();else firebase.initializeApp(CFG.firebase);
     auth=firebase.auth();db=firebase.firestore();db.settings({ignoreUndefinedProperties:true});mode='cloud';
+    clearLoginCredentials();
     $('modePanel').classList.add('hidden');$('loginPanel').classList.remove('hidden');setStatus('等待員工登入');
     const hasInviteLink=auth.isSignInWithEmailLink(window.location.href);
     $('inviteActivationBox').classList.toggle('hidden',!hasInviteLink);
@@ -407,7 +446,7 @@ function startCloud(){
     auth.onAuthStateChanged(async u=>{
       // Email 邀請認領流程由員工填寫收件信箱與密碼後啟動，不自動把舊登入狀態當成受邀員工。
       if(registering||hasInviteLink)return;
-      if(!u){if($('app').classList.contains('hidden')){$('loginPanel').classList.remove('hidden');setStatus('等待員工登入');}return;}
+      if(!u){clearLoginCredentials();if($('app').classList.contains('hidden')){$('loginPanel').classList.remove('hidden');setStatus('等待員工登入');}return;}
       try{await authorize(u);initApp();}
       catch(e){await auth.signOut();$('app').classList.add('hidden');$('loginPanel').classList.remove('hidden');fail(e,'banner');setStatus('登入未授權');}
     });
@@ -439,7 +478,18 @@ async function claimStaffInvite(u){
     tx.update(inviteRef,{status:'claimed',claimedUid:u.uid,claimedAt:firebase.firestore.FieldValue.serverTimestamp()});
   });
 }
-async function login(){try{await auth.signInWithEmailAndPassword(normalizeEmail($('email').value),$('password').value);$('password').value='';}catch(e){fail(e,'banner');}}
+async function login(){
+  const email=normalizeEmail($('email').value),password=$('password').value;
+  if(!email||!password||!passwordManuallyEntered){
+    $('password').value='';passwordManuallyEntered=false;
+    toast('請輸入 Email，並手動重新輸入密碼。瀏覽器自動填入的密碼不可直接登入。','error','banner');
+    return;
+  }
+  // 無論驗證成功或失敗，密碼只在這次驗證使用，不留在畫面或全域狀態。
+  try{await auth.signInWithEmailAndPassword(email,password);}
+  catch(e){fail(e,'banner');}
+  finally{$('password').value='';passwordManuallyEntered=false;}
+}
 function inviteEmailActionSettings(){
   // 使用現有 GitHub Pages 授權網域；Email Link 由 Firebase Auth 寄送。
   return {url:window.location.origin+window.location.pathname,handleCodeInApp:true};
@@ -505,7 +555,16 @@ async function activateInvitedStaff(){
     // 不強制登出成功兌換 Email Link 的員工，避免後續失敗時無法恢復。
   }finally{registering=false;$('activateButton').disabled=false;}
 }
-async function logout(){if(mode==='cloud'){await auth.signOut();location.reload();}else location.reload();}
+async function logout(){
+  // 必須先清除畫面中的帳密，再進行 Firebase 登出；不保留舊信箱、密碼。
+  clearLoginCredentials();
+  if($('activationPassword'))$('activationPassword').value='';
+  try{
+    if(mode==='cloud'&&auth)await auth.signOut();
+  }catch(e){fail(e,'banner');setStatus('登出未完成，請重試');return;}
+  clearLoginCredentials();
+  location.replace(window.location.origin+window.location.pathname);
+}
 function fresh(){if(mode!=='cloud')return; if(!navigator.onLine)throw new Error('網路離線；禁止核銷以避免跨館重複'); if(!user)throw new Error('尚未登入');}
 function lock(v){busy=v;for(const b of document.querySelectorAll('#app button')){if(!b.classList.contains('tab'))b.disabled=v;}for(const x of ['phone','branch'])if($(x))$(x).disabled=v;for(const id of ['finishClaim','cancelClaim'])if($(id))$(id).disabled=v;}
 function phoneKey(v){if(busy||verified)return;const el=$('phone');if(v==='clear')el.value='';else if(v==='back')el.value=el.value.slice(0,-1);else if(/^\d$/.test(v))el.value=(el.value+v).slice(0,10);resetVerification();}
