@@ -116,7 +116,7 @@ fieldset[disabled]{opacity:.55}
 @media(max-width:560px){.primary-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.primary-nav .tab{padding:11px 6px;font-size:13px}.backend-panel{padding:13px}.backend-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.backend-tab{font-size:13px;padding:10px 6px}}
 </style>
 </head><body>
-<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式環境建置中 v1.14.7</small></div><div class="buttons"><span id="status" class="status">初始化中</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
+<header><div class="bar"><div><h1>GK 成吉思汗｜全館集點查驗</h1><small>感謝祭 · 跨館防重複核銷 · 正式環境建置中 v1.14.8</small></div><div class="buttons"><span id="status" class="status">初始化中</span><span id="who" class="muted tiny"></span><button id="logout" class="btn hidden" onclick="logout()">登出</button></div></div></header>
 <main>
 <div id="banner" class="notice">正式環境建置中：尚未完成 Firebase 安全規則部署、權限檢查及正式驗收前，請勿匯入真實會員資料或進行正式核銷。</div>
 <section class="panel" id="modePanel"><h2>啟動方式</h2><p class="info">正式版只使用獨立的 Firebase 正式資料庫，不使用本機示範模式。</p><div class="buttons"><button class="btn primary" onclick="startCloud()">進入正式雲端系統</button></div></section>
@@ -248,7 +248,7 @@ fieldset[disabled]{opacity:.55}
     <p class="info">提交前會再次顯示舊姓名與新姓名，供你核對。</p>
   </div>
 </section>
-<section id="view-import" class="panel hidden"><h2>資料批次匯入（主管權限）</h2><div class="grid"><div id="memberImportPanel" class="panel sub"><h3>一、匯入公司會員名冊</h3><p class="info">需要「姓名／顧客名稱」及「手機／電話」欄位；僅供運動打卡與身體檢測，全館共用，不依作業館別分組；新增／更新不會清除核銷歷史。</p><input id="memberFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空，方便接續匯入下一份。</p><button class="btn primary" onclick="importMemberFile()">預覽名冊並確認匯入</button></div><div class="panel sub"><h3>二、匯入教練課簽到報表</h3><p class="info">依上方選定館別匯入公司 11 欄課程執行報表，逐堂去重，依合約訂單編號建立待領點數；<strong>不需會員名冊，也不必歸戶</strong>。</p><input id="ptFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空，方便接續匯入下一份。</p><button class="btn primary" onclick="importPTFile()">預覽課程並確認匯入</button></div></div><p class="notice">重要：匯入成功訊息只會在雲端寫入完成後出現。大量匯入可能需要時間；請勿關閉頁面。系統不會替未存檔資料顯示成功。</p><div id="importResult" class="info"></div></section>
+<section id="view-import" class="panel hidden"><h2>資料批次匯入（主管權限）</h2><div class="grid"><div id="memberImportPanel" class="panel sub"><h3>一、匯入公司會員名冊</h3><p class="info">需要「姓名／顧客名稱」及「手機／電話」欄位；會員手機是全館共用的唯一識別鍵，不依館別分開儲存。</p><p id="memberImportScopeNote" class="notice">總管理員可批次新增／更新會員；館主管只能新增尚未建檔的會員，若手機已存在會自動略過，不會覆蓋原姓名。館主管無法匯出或瀏覽全館名冊。</p><input id="memberFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空；僅影響會員名冊，不會清除已建立的核銷歷史。</p><button class="btn primary" onclick="importMemberFile()">預覽名冊並確認匯入</button></div><div class="panel sub"><h3>二、匯入教練課簽到報表</h3><p class="info">依上方選定館別匯入公司 11 欄課程執行報表，逐堂去重，依合約訂單編號建立待領點數；<strong>不需會員名冊，也不必歸戶</strong>。</p><input id="ptFile" type="file" accept=".xlsx,.xls,.csv"><p class="info">匯入完成後，選擇的檔案會自動清空，方便接續匯入下一份。</p><button class="btn primary" onclick="importPTFile()">預覽課程並確認匯入</button></div></div><p class="notice">重要：匯入成功訊息只會在雲端寫入完成後出現。大量匯入可能需要時間；請勿關閉頁面。系統不會替未存檔資料顯示成功。</p><div id="importResult" class="info"></div></section>
 <section id="view-logs" class="panel hidden"><h2 id="logsHeading">全館核銷紀錄後台</h2><p class="info">僅列出已由櫃檯確認 LINE 成功發點的紀錄，依雲端交易紀錄查詢，可跨館檢視全部核銷。核銷歷史不會因修改會員姓名而清除。列表每次載入最近 100 筆；主管匯出會依此區塊的「館別／項目／日期」條件擷取符合的完整紀錄，不受列表 100 筆限制。</p><div class="logtools"><label>館別<select id="logBranch"></select></label><label>項目<select id="logType"><option value="">全部項目</option><option value="CHECKIN">運動打卡</option><option value="INBODY">身體檢測</option><option value="PT">教練課程</option><option value="COURSE_EXEC">舊版手動執行課程（歷史紀錄）</option></select></label><label>開始日期<input id="logFrom" type="date"></label><label>結束日期<input id="logTo" type="date"></label></div><div class="buttons"><button class="btn" onclick="loadLogs(true)">查詢最近 100 筆</button><button id="moreLogsBtn" class="btn" onclick="loadLogs(false)">下一頁</button><button data-export-only="true" class="btn green" onclick="exportLogs()">主管匯出目前篩選紀錄（CSV）</button></div><div id="logsExportScope" class="export-scope">匯出範圍依本區「館別」篩選：選「全部館別」即匯出全館；選單一館別即只匯出該館。項目與日期條件同步套用。CSV 含完整手機號碼，限主管驗證下載。</div><p id="logsSummary" class="info"></p><div id="logList" class="scroll"></div><section class="panel sub" id="pendingManage"><h3>待確認領點（主管處理）</h3><p class="info">例如櫃檯中途關閉頁面，會員資格會保留，避免其他館再次發放。主管須先確認 LINE 確實沒有發點，才能解除保留。</p><button class="btn" onclick="loadPending()">查詢待確認領點</button><div id="pendingList" class="scroll info" style="margin-top:12px"></div></section></section>
 <section id="view-staff-admin" class="panel hidden">
   <h2>員工帳號管理｜總管理員／館主管</h2>
@@ -378,7 +378,8 @@ function initApp(){
   setupBranch();$('modePanel').classList.add('hidden');$('loginPanel').classList.add('hidden');$('app').classList.remove('hidden');
   $('pendingManage').classList.toggle('hidden',!isAdmin());
   document.querySelectorAll('[data-export-only]').forEach(x=>x.classList.toggle('hidden',!isManager()));
-  $('memberImportPanel').classList.toggle('hidden',!isAdmin());
+  $('memberImportPanel').classList.toggle('hidden',!isManager());
+  $('memberImportScopeNote').textContent=isBranchManager()?'【館主管：'+userProfile.branch+'館】只能匯入本館取得的會員檔案；新手機會新增到全館共用名冊，已存在手機自動略過且不修改姓名。不能瀏覽或匯出全館會員名冊。':'【總管理員】可批次新增或更新全館會員；相同手機會以本次檔案姓名更新，請先核對來源。';
   $('memberExportPanel').classList.toggle('hidden',!isAdmin());
   for(const section of ['logs','import'])document.querySelector(`[data-backend-tab="${section}"]`).classList.toggle('hidden',!isManager());
   document.querySelector('[data-backend-tab="staff-admin"]').classList.toggle('hidden',mode!=='cloud'||!isManager());
@@ -977,7 +978,92 @@ async function redeemSelectedPT(){
 
 function col(headers,terms){return headers.findIndex(x=>terms.some(z=>String(x).toLowerCase().includes(z.toLowerCase())));}
 async function readSheet(input){if(typeof XLSX==='undefined')throw new Error('Excel 解析器尚未載入，請檢查網路');const f=$(input).files[0];if(!f)throw new Error('請先選擇 Excel／CSV 檔案');const data=await f.arrayBuffer();const book=XLSX.read(data,{type:'array'});return XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:'',raw:false});}
-async function importMemberFile(){try{requireAdmin();fresh();const rows=await readSheet('memberFile');const heads=rows[0]||[],p=col(heads,['手機','電話','phone']),n=col(heads,['顧客名稱','姓名','name']);if(p<0||n<0)throw new Error('名冊須包含手機與姓名欄位');if(col(heads,['教練','簽到時間'])>=0)throw new Error('這看起來是教練簽到表，禁止當作會員名冊匯入');const map=new Map();let skipped=0;for(const r of rows.slice(1)){const phone=normalizedPhone(r[p]),name=tidyName(r[n]);if(phone&&name)map.set(phone,{phone,name});else skipped++;}if(!map.size)throw new Error('沒有符合格式的會員');if(!confirm(`準備匯入 ${map.size} 筆有效會員（略過 ${skipped} 筆）。\n不刪除原有會員與核銷紀錄，確認執行？`))return;lock(true);let done=0;for(let i=0;i<map.size;i+=300){const chunk=[...map.values()].slice(i,i+300);if(mode==='cloud'){const batch=db.batch();for(const x of chunk)batch.set(db.collection('members').doc(x.phone),{...x,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await batch.commit();}else for(const x of chunk)store.members[x.phone]={...(store.members[x.phone]||{}),...x};done+=chunk.length;$('importResult').textContent=`已確認儲存 ${done}/${map.size} 筆`; }if(mode==='demo')saveDemo();$('memberFile').value='';$('importResult').textContent=`會員名冊匯入完成：${done} 筆，略過 ${skipped} 筆。名冊僅供打卡與身體檢測查驗，不影響課程點數。`;showFeedbackModal('會員名冊匯入完成','手機名冊只用於全館打卡及身體檢測；課程執行不需要會員名冊。','ok',[{label:'成功寫入',value:done},{label:'無效略過',value:skipped}]);}catch(e){fail(e,'importResult');showFeedbackModal('會員名冊匯入未完成',e?.message||String(e),'error');}finally{lock(false);}}
+// v1.14.8: 館主管僅做「新增，不覆寫」的會員批次匯入；總管理員維持原批次更新模式。
+// 館主管讀取 CSV/Excel 中的手機文件 ID，不對 members 做全館 list 查詢。
+async function createMissingMembersInTransaction(chunk){
+  const refs=chunk.map(x=>db.collection('members').doc(x.phone));
+  return await db.runTransaction(async tx=>{
+    // Firestore 交易規定所有讀取必須在寫入前完成，並防止兩館同時匯入覆蓋姓名。
+    const existing=await Promise.all(refs.map(ref=>tx.get(ref)));
+    let created=0, alreadyExists=0;
+    for(let k=0;k<chunk.length;k++){
+      if(existing[k].exists){alreadyExists++;continue;}
+      tx.set(refs[k],{
+        name:chunk[k].name,phone:chunk[k].phone,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid
+      });
+      created++;
+    }
+    return {created,alreadyExists};
+  });
+}
+async function importMemberFile(){
+  let locked=false,created=0,alreadyExists=0,processed=0,invalid=0,repeated=0;
+  try{
+    requireManager();fresh();
+    const rows=await readSheet('memberFile');
+    const heads=rows[0]||[],p=col(heads,['手機','電話','phone']),n=col(heads,['顧客名稱','姓名','name']);
+    if(p<0||n<0)throw new Error('名冊須包含手機與姓名欄位');
+    if(col(heads,['教練','簽到時間'])>=0)throw new Error('這看起來是教練簽到表，禁止當作會員名冊匯入');
+    const map=new Map();
+    for(const r of rows.slice(1)){
+      const phone=normalizedPhone(r[p]),name=tidyName(r[n]);
+      if(!phone||!name){invalid++;continue;}
+      // 同一檔案同手機重複列，先保留第一列；不讓不同姓名被靜默覆蓋。
+      if(map.has(phone)){repeated++;if(map.get(phone).name!==name)throw new Error('檔案出現同手機但不同姓名（'+maskPhone(phone)+'），請先修正重複資料再匯入。');continue;}
+      map.set(phone,{phone,name});
+    }
+    if(!map.size)throw new Error('沒有符合格式的會員');
+    const managerOnly=isBranchManager(),values=[...map.values()];
+    const action=managerOnly
+      ?'【館主管新增模式】只新增未建檔會員；既有手機一律略過，不修改姓名。名冊全館共用。'
+      :'【總管理員更新模式】既有手機會更新為檔案內姓名；不刪除會員或核銷紀錄。';
+    if(!confirm(`準備處理 ${map.size} 筆有效會員（無效 ${invalid} 筆、檔案內重複 ${repeated} 筆）。\n${action}\n\n請確認名冊資料來源正確，是否開始？`))return;
+    lock(true);locked=true;
+    if(managerOnly){
+      // 每 20 筆一個原子交易：先確認文件是否存在，僅建立不存在的手機。
+      for(let i=0;i<values.length;i+=20){
+        const part=values.slice(i,i+20);
+        const result=await createMissingMembersInTransaction(part);
+        created+=result.created;alreadyExists+=result.alreadyExists;processed+=part.length;
+        $('importResult').textContent=`館主管匯入進度 ${processed}/${values.length}｜新增 ${created}｜既有手機略過 ${alreadyExists}`;
+      }
+    }else{
+      // 保留原總管理員批次匯入的 merge 更新語意，避免影響既有作業。
+      for(let i=0;i<values.length;i+=300){
+        const part=values.slice(i,i+300);
+        if(mode==='cloud'){
+          const batch=db.batch();
+          for(const x of part)batch.set(db.collection('members').doc(x.phone),{
+            ...x,updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+          await batch.commit();
+        }else for(const x of part)store.members[x.phone]={...(store.members[x.phone]||{}),...x};
+        processed+=part.length;created+=part.length;
+        $('importResult').textContent=`總管理員匯入進度 ${processed}/${values.length}`;
+      }
+      if(mode==='demo')saveDemo();
+    }
+    $('memberFile').value='';
+    const summary=managerOnly
+      ?`本館會員名冊匯入完成：新增 ${created} 筆、已存在略過 ${alreadyExists} 筆；無效 ${invalid} 筆，檔案內重複 ${repeated} 筆。`
+      :`全館會員名冊匯入完成：新增／更新 ${created} 筆；無效 ${invalid} 筆，檔案內重複 ${repeated} 筆。`;
+    $('importResult').textContent=summary;
+    showFeedbackModal('會員名冊匯入完成',summary+' 會員名冊全館共用，不影響私教課點數及既有核銷紀錄。','ok',managerOnly
+      ?[{label:'成功新增',value:created},{label:'既有手機略過',value:alreadyExists},{label:'無效／重複',value:invalid+repeated}]
+      :[{label:'新增／更新',value:created},{label:'無效／重複',value:invalid+repeated}]);
+  }catch(e){
+    const msg=(e?.message||String(e));
+    if(locked&&processed>0){
+      const partial=`匯入中斷；前面 ${processed} 筆已完成處理（新增／更新 ${created}、已存在略過 ${alreadyExists}）。可用相同檔案重新執行；館主管模式會略過先前成功新增的手機。`;
+      $('importResult').textContent=partial+' 原因：'+msg;
+      showFeedbackModal('會員名冊部分完成',partial+' 原因：'+msg,'warning');
+    }else{
+      fail(e,'importResult');
+      showFeedbackModal('會員名冊匯入未完成',msg,'error');
+    }
+  }finally{if(locked)lock(false);}
+}
 // 用原始 11 欄報表保留合約編號；舊版雙區報表若沒有合約欄位則跳過不發點。
 function extractCourseRows(rows){
   const h=(rows[0]||[]).map(x=>String(x||'').trim());
